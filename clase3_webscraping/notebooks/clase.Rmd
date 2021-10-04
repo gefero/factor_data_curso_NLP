@@ -1,0 +1,26 @@
+---
+title: "Web scraping con RVest"
+output: html_notebook
+---
+
+## Introducción
+
+Ya sabemos que en Internet hay una cantidad masiva de información la cual e puede ser una gran fuente para los campos de estudio que querramos abordar. Ahora bien, para poder recolectar esta información es necesario aplicar herramientas de web scraping.
+
+Esta técnica busca lograr la automatización de la recolección de datos de un sitio. En líneas generales, la lógica del proceso es la siguiente:
+
+1. entrar a una página
+2. buscar en el código HTML la información que nos interesa y
+3. pasarla a algún formato tabular (filas y columas)
+
+Antes de empezar a armar un scraper, es una buena práctica inspeccionar la estructura del sitio del que vamos a construir la información, para tener una idea de dónde está dicha información.
+
+Supongamos que queremos sistematizar los libros de cada autor que están disponibles en la editorial Anagrama. Podríamos ir a la librería de barrio... o extraer los títulos de la [página web](https://www.anagrama-ed.es/autores/a?p=2). Para este ejemplo, vamos a scrapear los títulos de [Paul Auster](https://www.anagrama-ed.es/autor/auster-paul-62). 
+
+*** 
+
+Los elementos de una página web suelen estar escritos en código HTML. El HTML está compuesto por diferentes objetos llamados tags (por ejemplo <div>, <a> <title>, <body>, `<head>`) que tienen atributos <class>, <ref> <id>, etc.).
+
+Si se fijan, el tag <p> está “adentro” del tag <div> con class=letra.
+
+Esto quiere decir que <p> es el hijo (o child) de <div>, y que <div> es el padre (o parent) de <p>. A su vez, los elementos <p> son hermanos (o siblings) entre ellos, y así se completa la familia de HTML.
