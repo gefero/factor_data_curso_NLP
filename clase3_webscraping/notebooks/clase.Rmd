@@ -2,8 +2,11 @@
 title: "Web scraping con RVest"
 output: html_notebook
 ---
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning =FALSE)
+```
 
-## Introducción
+### Introducción
 
 Ya sabemos que en Internet hay una cantidad masiva de información la cual e puede ser una gran fuente para los campos de estudio que querramos abordar. Ahora bien, para poder recolectar esta información es necesario aplicar herramientas de web scraping.
 
@@ -15,12 +18,87 @@ Esta técnica busca lograr la automatización de la recolección de datos de un 
 
 Antes de empezar a armar un scraper, es una buena práctica inspeccionar la estructura del sitio del que vamos a construir la información, para tener una idea de dónde está dicha información.
 
-Supongamos que queremos sistematizar los libros de cada autor que están disponibles en la editorial Anagrama. Podríamos ir a la librería de barrio... o extraer los títulos de la [página web](https://www.anagrama-ed.es/autores/a?p=2). Para este ejemplo, vamos a scrapear los títulos de [Paul Auster](https://www.anagrama-ed.es/autor/auster-paul-62). 
+Supongamos que queremos sistematizar los libros de cada autor que están disponibles en la editorial Anagrama. Podríamos ir a la librería de barrio... o extraer los títulos de la [página web](https://www.anagrama-ed.es/autores/a?p=2). Para este ejemplo, vamos a scrapear los títulos de [Ricardo Piglia](https://www.anagrama-ed.es/autor/piglia-ricardo-856). 
 
-*** 
+### HTML
 
-Los elementos de una página web suelen estar escritos en código HTML. El HTML está compuesto por diferentes objetos llamados tags (por ejemplo <div>, <a> <title>, <body>, `<head>`) que tienen atributos <class>, <ref> <id>, etc.).
+El contenido y la estructura de una página web está escrita en código HTML. El HTML está compuesto por diferentes objetos llamados tags (por ejemplo **div, a, body, head**) que están rodeados por el símbolo <>. Cada tag cumple una función diferente -y los conjuntos de tags dan forma a la página. 
 
-Si se fijan, el tag <p> está “adentro” del tag <div> con class=letra.
+A su vez, tienen atributos indicados por CSS que "estilizan" la página. Los más importantes para scrapear son **class**, **href** e **id**. 
 
-Esto quiere decir que <p> es el hijo (o child) de <div>, y que <div> es el padre (o parent) de <p>. A su vez, los elementos <p> son hermanos (o siblings) entre ellos, y así se completa la familia de HTML.
+Para ver cómo está compuesto este código, hay que ir a la página que queremos y hacer clic derecho + inspeccionar. Identificar la ubicación de estos elementos html es necesario para ver dónde está la información que queremos conseguir y pensar la lógica de por qué lado la vamos a agarrar. 
+
+En nuestro caso, necesitamos conseguir de esta página un listado de los links de cada libro. Si se fijan, el tag **span** con el título del libro está “adentro” del tag **div** con **'class = libro-vertical__info'** . El link está dentro del mismo **div** pero en el atributo **a**. Los elementos están *anidados*. 
+
+### La herramienta: RVest
+
+Para hacer el scrapeo vamos a usar la librería **RVest**. La importamos a ella y otras librerías auxiliares que nos van a servir. 
+```{r, eval=FALSE}
+library(rvest)
+library(tidyverse)
+```
+
+Lo primero que hay que hacer es "leer" la página html para importarla a R. 
+
+```{r}
+piglia <- read_html("https://www.anagrama-ed.es/autor/piglia-ricardo-856")
+
+piglia
+```
+
+La función **read_html()** devuelve una lista que contiene la estructura arbolada de HTML que mencionamos antes. Por suerte RVest usa la lógica de los pipes para acceder a estos elementos, por lo que para encontrar lo que queremos podemos usar la funcion **html_elements()**. Esta identifica los elementos que buscamos según XPath o [selectores CSS](https://www.w3schools.com/cssref/css_selectors.asp). Como podemos encontrar lo que queríamos identificándolo por una clase única, vamos a usar CSS. 
+
+```{r}
+libros <- piglia %>% html_elements(".libro-vertical__info")%>% 
+        html_elements("a")%>% 
+        html_attr("href")
+```
+
+¿Qué se está haciendo acá? Primero, le pido al paquete que traiga todos los elementos cuyo atributo class es **libro-vertical__info** . Siguiendo la lógica de árbol y elementos anidados, con un pipe le puedo indicar que -dentro de esos elementos que encontró- me traiga aquellos elementos **a**. Finalmente, de esos elementos, le pido que me traiga el atributo href que es el que contiene el link. 
+
+Esto nos devuelve un listado de los links de los libros:
+
+```{r}
+head(libros)
+
+libros_links <- paste0("https://www.anagrama-ed.es", libros)
+```
+
+Ahora que tenemos el listado sobre el cual queremos iterar, hay que revisar la página de cada libro para ver la información que tiene. En principio, podemos destacar 3 elementos de nuestro interés: 
+
+1. el título
+2. el resumen
+3. la tabla con identificador del libro, el precio, la cantidad de páginas, la colección y la fecha de publicación
+
+Siguiendo la lógica anterior, podemos observar que el título está en el elemento **h2**. ¿Qué pasa cuando lo seleccionamos únicamente por el? 
+```{r}
+libro <- read_html(libros_links[1])
+
+libro %>% html_elements("h1")
+```
+La página nos trae también el botón para suscribirse. Por eso, vamos a especificar la búsqueda pidiéndole a RVest que nos traiga los elementos **h2** con **class titulo-libro**. 
+
+Con **html_text2()** extraemos el texto del elemento. 
+```{r}
+libro %>% html_elements("h1.titulo-libro") %>% 
+        html_text2()
+```
+Vamos a hacer lo mismo para el resumen: este lo identificamos porque está en el elemento div con clase textContent. 
+```{r}
+libro %>% html_element(".textContent")%>%
+        html_text2()%>%
+        str_squish() #Borramos los espacios en blanco de más
+```
+Por último, tenemos la información de la tablita abajo de la imagen. Podríamos extraer los elementos uno por uno, pero por suerte RVest tiene una función para traer directamente los elementos **table** en formato tibble. 
+```{r}
+ tabla_info <- libro %>% 
+        html_element("table.no-print") %>% 
+        html_table()
+tabla_info
+```
+
+```{r}
+tabla_info%>%
+        pivot_wider(names_from = "X1", values_from = "X2")
+```
+

@@ -23,9 +23,9 @@ precios <- autor %>% html_elements(".price") %>% html_text2()
 disponibilidad <- autor %>% html_elements("a.product_type_simple") %>% html_text2()
 
 ### ANAGRAMA
-auster <- read_html("https://www.anagrama-ed.es/autor/auster-paul-62")
+piglia <- read_html("https://www.anagrama-ed.es/autor/piglia-ricardo-856")
 
-libros <- auster %>% html_elements(".libro-vertical__info")%>% 
+libros <- piglia %>% html_elements(".libro-vertical__info")%>% 
         html_elements("a")%>% 
         html_attr("href")
 

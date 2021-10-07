@@ -215,8 +215,10 @@ pre code {
 
 
 <!-- rnb-text-begin -->
-<div id="introducción" class="section level2">
-<h2>Introducción</h2>
+<!-- rnb-text-end -->
+<!-- rnb-text-begin -->
+<div id="introducción" class="section level3">
+<h3>Introducción</h3>
 <p>Ya sabemos que en Internet hay una cantidad masiva de información la cual e puede ser una gran fuente para los campos de estudio que querramos abordar. Ahora bien, para poder recolectar esta información es necesario aplicar herramientas de web scraping.</p>
 <p>Esta técnica busca lograr la automatización de la recolección de datos de un sitio. En líneas generales, la lógica del proceso es la siguiente:</p>
 <ol style="list-style-type: decimal">
@@ -225,35 +227,156 @@ pre code {
 <li>pasarla a algún formato tabular (filas y columas)</li>
 </ol>
 <p>Antes de empezar a armar un scraper, es una buena práctica inspeccionar la estructura del sitio del que vamos a construir la información, para tener una idea de dónde está dicha información.</p>
-<p>Supongamos que queremos sistematizar los libros de cada autor que están disponibles en la editorial Anagrama. Podríamos ir a la librería de barrio… o extraer los títulos de la <a href="https://www.anagrama-ed.es/autores/a?p=2">página web</a>. Para este ejemplo, vamos a scrapear los títulos de <a href="https://www.anagrama-ed.es/autor/auster-paul-62">Paul Auster</a>.</p>
-<hr />
-Los elementos de una página web suelen estar escritos en código HTML. El HTML está compuesto por diferentes objetos llamados tags (por ejemplo
-<div>
-, <a>
-<title>
-,
-<body>
-<p>, <code>&lt;head&gt;</code>) que tienen atributos <class>, <ref> <id>, etc.).</p>
-Si se fijan, el tag
-<p>
-está “adentro” del tag
-<div>
-<p>con class=letra.</p>
-Esto quiere decir que
-<p>
-es el hijo (o child) de
-<div>
-, y que
-<div>
-es el padre (o parent) de
-<p>
-. A su vez, los elementos
-<p>
-<p>son hermanos (o siblings) entre ellos, y así se completa la familia de HTML.</p>
+<p>Supongamos que queremos sistematizar los libros de cada autor que están disponibles en la editorial Anagrama. Podríamos ir a la librería de barrio… o extraer los títulos de la <a href="https://www.anagrama-ed.es/autores/a?p=2">página web</a>. Para este ejemplo, vamos a scrapear los títulos de <a href="https://www.anagrama-ed.es/autor/piglia-ricardo-856">Ricardo Piglia</a>.</p>
+</div>
+<div id="html" class="section level3">
+<h3>HTML</h3>
+<p>El contenido y la estructura de una página web está escrita en código HTML. El HTML está compuesto por diferentes objetos llamados tags (por ejemplo <strong>div, a, body, head</strong>) que están rodeados por el símbolo &lt;&gt;. Cada tag cumple una función diferente -y los conjuntos de tags dan forma a la página.</p>
+<p>A su vez, tienen atributos indicados por CSS que “estilizan” la página. Los más importantes para scrapear son <strong>class</strong>, <strong>href</strong> e <strong>id</strong>.</p>
+<p>Para ver cómo está compuesto este código, hay que ir a la página que queremos y hacer clic derecho + inspeccionar. Identificar la ubicación de estos elementos html es necesario para ver dónde está la información que queremos conseguir y pensar la lógica de por qué lado la vamos a agarrar.</p>
+<p>En nuestro caso, necesitamos conseguir de esta página un listado de los links de cada libro. Si se fijan, el tag <strong>span</strong> con el título del libro está “adentro” del tag <strong>div</strong> con **’class = libro-vertical__info’** . El link está dentro del mismo <strong>div</strong> pero en el atributo <strong>a</strong>. Los elementos están <em>anidados</em>.</p>
+</div>
+<div id="la-herramienta-rvest" class="section level3">
+<h3>La herramienta: RVest</h3>
+<p>Para hacer el scrapeo vamos a usar la librería <strong>RVest</strong>. La importamos a ella y otras librerías auxiliares que nos van a servir.</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjpbImxpYnJhcnkocnZlc3QpIiwibGlicmFyeSh0aWR5dmVyc2UpIl19 -->
+<pre class="r"><code>library(rvest)
+library(tidyverse)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Lo primero que hay que hacer es “leer” la página html para importarla a R.</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucGlnbGlhIDwtIHJlYWRfaHRtbChcImh0dHBzOi8vd3d3LmFuYWdyYW1hLWVkLmVzL2F1dG9yL3BpZ2xpYS1yaWNhcmRvLTg1NlwiKVxuXG5waWdsaWFcbmBgYCJ9 -->
+<pre class="r"><code>piglia &lt;- read_html(&quot;https://www.anagrama-ed.es/autor/piglia-ricardo-856&quot;)
+
+piglia</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoie2h0bWxfZG9jdW1lbnR9XG48aHRtbD5cblsxXSA8aGVhZD5cXG48bWV0YSBodHRwLWVxdWl2PVwiQ29udGVudC1UeXBlXCIgY29udGVudD1cInRleHQvaHRtbDsgY2hhcnNldD1VVEYtOFwiPlxcbjx0aXRsZT5QaWdsaWEsIFJpY2FyZG8gIC4uLlxuWzJdIDxib2R5Plxcbjxub3NjcmlwdD48aWZyYW1lIHNyYz1cImh0dHBzOi8vd3d3Lmdvb2dsZXRhZ21hbmFnZXIuY29tL25zLmh0bWw/aWQ9R1RNLU5SUkZOMzZcIiBoZWlnaHQ9XCIwXCIgdyAuLi5cbiJ9 -->
+<pre><code>{html_document}
+&lt;html&gt;
+[1] &lt;head&gt;\n&lt;meta http-equiv=&quot;Content-Type&quot; content=&quot;text/html; charset=UTF-8&quot;&gt;\n&lt;title&gt;Piglia, Ricardo  ...
+[2] &lt;body&gt;\n&lt;noscript&gt;&lt;iframe src=&quot;https://www.googletagmanager.com/ns.html?id=GTM-NRRFN36&quot; height=&quot;0&quot; w ...</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>La función <strong>read_html()</strong> devuelve una lista que contiene la estructura arbolada de HTML que mencionamos antes. Por suerte RVest usa la lógica de los pipes para acceder a estos elementos, por lo que para encontrar lo que queremos podemos usar la funcion <strong>html_elements()</strong>. Esta identifica los elementos que buscamos según XPath o <a href="https://www.w3schools.com/cssref/css_selectors.asp">selectores CSS</a>. Como podemos encontrar lo que queríamos identificándolo por una clase única, vamos a usar CSS.</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicm9zIDwtIHBpZ2xpYSAlPiUgaHRtbF9lbGVtZW50cyhcIi5saWJyby12ZXJ0aWNhbF9faW5mb1wiKSU+JSBcbiAgICAgICAgaHRtbF9lbGVtZW50cyhcImFcIiklPiUgXG4gICAgICAgIGh0bWxfYXR0cihcImhyZWZcIilcbmBgYCJ9 -->
+<pre class="r"><code>libros &lt;- piglia %&gt;% html_elements(&quot;.libro-vertical__info&quot;)%&gt;% 
+        html_elements(&quot;a&quot;)%&gt;% 
+        html_attr(&quot;href&quot;)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>¿Qué se está haciendo acá? Primero, le pido al paquete que traiga todos los elementos cuyo atributo class es **libro-vertical__info** . Siguiendo la lógica de árbol y elementos anidados, con un pipe le puedo indicar que -dentro de esos elementos que encontró- me traiga aquellos elementos <strong>a</strong>. Finalmente, de esos elementos, le pido que me traiga el atributo href que es el que contiene el link.</p>
+<p>Esto nos devuelve un listado de los links de los libros:</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuaGVhZChsaWJyb3MpXG5gYGAifQ== -->
+<pre class="r"><code>head(libros)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIFwiL2xpYnJvL25hcnJhdGl2YXMtaGlzcGFuaWNhcy9jdWVudG9zLWNvbXBsZXRvcy85Nzg4NDMzOTk5MTYwL05IXzY2NFwiICAgICAgICAgICAgICAgICAgICAgICAgICAgXG5bMl0gXCIvbGlicm8vbmFycmF0aXZhcy1oaXNwYW5pY2FzL2xvcy1jYXNvcy1kZWwtY29taXNhcmlvLWNyb2NlLzk3ODg0MzM5OTg2MDYvTkhfNjExXCIgICAgICAgICAgICAgICBcblszXSBcIi9saWJyby9uYXJyYXRpdmFzLWhpc3BhbmljYXMvbG9zLWRpYXJpb3MtZGUtZW1pbGlvLXJlbnppLzk3ODg0MzM5OTg0MjIvTkhfNTkyXCIgICAgICAgICAgICAgICAgIFxuWzRdIFwiL2xpYnJvL25hcnJhdGl2YXMtaGlzcGFuaWNhcy9sb3MtZGlhcmlvcy1kZS1lbWlsaW8tcmVuemktbG9zLWFub3MtZmVsaWNlcy85Nzg4NDMzOTk4MTg3L05IXzU3MFwiXG5bNV0gXCIvbGlicm8vbmFycmF0aXZhcy1oaXNwYW5pY2FzL2xvcy1kaWFyaW9zLWRlLWVtaWxpby1yZW56aS85Nzg4NDMzOTk3OTgyL05IXzU1MVwiICAgICAgICAgICAgICAgICBcbls2XSBcIi9saWJyby9uYXJyYXRpdmFzLWhpc3BhbmljYXMvYW50b2xvZ2lhLXBlcnNvbmFsLzk3ODg0MzM5OTc4OTAvTkhfNTQyXCIgICAgICAgICAgICAgICAgICAgICAgICAgIFxuIn0= -->
+<pre><code>[1] &quot;/libro/narrativas-hispanicas/cuentos-completos/9788433999160/NH_664&quot;                           
+[2] &quot;/libro/narrativas-hispanicas/los-casos-del-comisario-croce/9788433998606/NH_611&quot;               
+[3] &quot;/libro/narrativas-hispanicas/los-diarios-de-emilio-renzi/9788433998422/NH_592&quot;                 
+[4] &quot;/libro/narrativas-hispanicas/los-diarios-de-emilio-renzi-los-anos-felices/9788433998187/NH_570&quot;
+[5] &quot;/libro/narrativas-hispanicas/los-diarios-de-emilio-renzi/9788433997982/NH_551&quot;                 
+[6] &quot;/libro/narrativas-hispanicas/antologia-personal/9788433997890/NH_542&quot;                          </code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicm9zX2xpbmtzIDwtIHBhc3RlMChcImh0dHBzOi8vd3d3LmFuYWdyYW1hLWVkLmVzXCIsIGxpYnJvcylcbmBgYCJ9 -->
+<pre class="r"><code>libros_links &lt;- paste0(&quot;https://www.anagrama-ed.es&quot;, libros)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Ahora que tenemos el listado sobre el cual queremos iterar, hay que revisar la página de cada libro para ver la información que tiene. En principio, podemos destacar 3 elementos de nuestro interés:</p>
+<ol style="list-style-type: decimal">
+<li>el título</li>
+<li>el resumen</li>
+<li>la tabla con identificador del libro, el precio, la cantidad de páginas, la colección y la fecha de publicación</li>
+</ol>
+<p>Siguiendo la lógica anterior, podemos observar que el título está en el elemento <strong>h2</strong>. ¿Qué pasa cuando lo seleccionamos únicamente por el?</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicm8gPC0gcmVhZF9odG1sKGxpYnJvc19saW5rc1sxXSlcblxubGlicm8gJT4lIGh0bWxfZWxlbWVudHMoXCJoMVwiKVxuYGBgIn0= -->
+<pre class="r"><code>libro &lt;- read_html(libros_links[1])
+
+libro %&gt;% html_elements(&quot;h1&quot;)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoie3htbF9ub2Rlc2V0ICgyKX1cblsxXSA8aDEgY2xhc3M9XCJuby1tYXJnaW4gdGl0dWxvLWxpYnJvIHQzNnB4XCI+Q3VlbnRvcyBjb21wbGV0b3M8XC9oMT5cXG5cblsyXSA8aDE+U3VzY3LDrWJldGU8XC9oMT5cXG5cbiJ9 -->
+<pre><code>{xml_nodeset (2)}
+[1] &lt;h1 class=&quot;no-margin titulo-libro t36px&quot;&gt;Cuentos completos&lt;/h1&gt;\n
+[2] &lt;h1&gt;Suscríbete&lt;/h1&gt;\n</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>La página nos trae también el botón para suscribirse. Por eso, vamos a especificar la búsqueda pidiéndole a RVest que nos traiga los elementos <strong>h2</strong> con <strong>class titulo-libro</strong>.</p>
+<p>Con <strong>html_text2()</strong> extraemos el texto del elemento.</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicm8gJT4lIGh0bWxfZWxlbWVudHMoXCJoMS50aXR1bG8tbGlicm9cIikgJT4lIFxuICAgICAgICBodG1sX3RleHQyKClcbmBgYCJ9 -->
+<pre class="r"><code>libro %&gt;% html_elements(&quot;h1.titulo-libro&quot;) %&gt;% 
+        html_text2()</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIFwiQ3VlbnRvcyBjb21wbGV0b3NcIlxuIn0= -->
+<pre><code>[1] &quot;Cuentos completos&quot;</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Vamos a hacer lo mismo para el resumen: este lo identificamos porque está en el elemento div con clase textContent.</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicm8gJT4lIGh0bWxfZWxlbWVudChcIi50ZXh0Q29udGVudFwiKSU+JVxuICAgICAgICBodG1sX3RleHQyKCklPiVcbiAgICAgICAgc3RyX3NxdWlzaCgpICNCb3JyYW1vcyBsb3MgZXNwYWNpb3MgZW4gYmxhbmNvIGRlIG3DoXNcbmBgYCJ9 -->
+<pre class="r"><code>libro %&gt;% html_element(&quot;.textContent&quot;)%&gt;%
+        html_text2()%&gt;%
+        str_squish() #Borramos los espacios en blanco de más</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIFwiTG9zIGN1ZW50b3MgY29tcGxldG9zIGRlIFJpY2FyZG8gUGlnbGlhLCB1biBjbMOhc2ljbyBjb250ZW1wb3LDoW5lbyBkZSBsYSBsaXRlcmF0dXJhIGVuIGxlbmd1YSBlc3Bhw7FvbGEuIEVzdGUgdm9sdW1lbiByZcO6bmUgbGEgdG90YWxpZGFkIGRlIGxhIG9icmEgY3VlbnTDrXN0aWNhIGRlIFJpY2FyZG8gUGlnbGlhLCBvcmdhbml6YWRhIHBvciBlbCBwcm9waW8gYXV0b3IgcG9jbyBhbnRlcyBkZSBtb3Jpci4gTGEgbmFycmF0aXZhIGJyZXZlIHJlY29ycmUgdG9kYSBzdSBjYXJyZXJhIGxpdGVyYXJpYSwgeSBhcXXDrSBlbmNvbnRyYXLDoSBlbCBsZWN0b3IgZGVzZGUgc3UgcHJpbWVyIHZvbHVtZW4gZGUgcmVsYXRvcywgcHVibGljYWRvIGVuIDE5NjcgKGRlc3B1w6lzIHJldmlzYWRvIHkgYW1wbGlhZG8gY29uIG51ZXZvcyB0ZXh0b3MpLCBoYXN0YSBsYXMgw7psdGltYXMgcHJvZHVjY2lvbmVzIGVuIGVzdGUgY2FtcG8sIGVzY3JpdGFzIGFsIGZpbmFsIGRlIHN1IHZpZGEsIGVudHJlIGxhcyBxdWUgZGVzdGFjYW4gTG9zIGNhc29zIGRlbCBjb21pc2FyaW8gQ3JvY2UsIGhvbWVuYWplIHkgdnVlbHRhIGRlIHR1ZXJjYSBhbCBnw6luZXJvIHBvbGljaWFjbyBxdWUgdGFudG8gYW3DsyBQaWdsaWEuIFkgZW50cmUgbWVkaW8sIGxhcyBkb3MgbmFycmFjaW9uZXMgbGFyZ2FzIGRlIFByaXNpw7NuIHBlcnBldHVhIHkgbG9zIHZvbMO6bWVuZXMgTm9tYnJlIGZhbHNvIOKAk3F1ZSBpbmNsdXllIHVuIHByb2RpZ2lvc28gaG9tZW5hamUgYSBSb2JlcnRvIEFybHTigJMgeSBDdWVudG9zIG1vcmFsZXMuIExhIG9yZ2FuaXphY2nDs24gZGUgZXN0ZSBsaWJybyBwZXJtaXRlIHBvciB1biBsYWRvIGFwcmVjaWFyIGxhIGV2b2x1Y2nDs24gZGVsIFBpZ2xpYSBjdWVudGlzdGEgeSBwb3IgZWwgb3RybyBkaXNmcnV0YXIgZGUgc3UgcmljYSB2ZXJzYXRpbGlkYWQuIFN1IGNvbmNlcGNpw7NuIGRlbCBnw6luZXJvIGxlIGxsZXZhIGRlc2RlIHVub3MgaW5pY2lvcyBlbiBxdWUsIHNlZ8O6biBzdXMgcHJvcGlhcyBwYWxhYnJhcywgdG9tYWJhIGNvbW8gbW9kZWxvcyBhIEhlbWluZ3dheSB5IEJvcmdlcywgaGFzdGEgZm9ybXVsYWNpb25lcyBjYWRhIHZleiBtw6FzIGjDrWJyaWRhcywgYWJpZXJ0YXMgeSBoZXRlcm9kb3hhcyBkZSBsYSBuYXJyYWNpw7NuIGJyZXZlOiBjb250YW1pbmFuZG8gZGVsaWJlcmFkYW1lbnRlIGVsIHJlbGF0byBjb24gbGEgcmVzZcOxYSwgZWwgY3VlbnRvIGNvbiBlbCBlbnNheW8gbyBsYSBmaWNjacOzbiBjb24gbGEgYXV0b2Jpb2dyYWbDrWEsIFBpZ2xpYSBlbGFib3JhIHRleHRvcyBxdWUgY3J1emFuIHVuYSB5IG90cmEgdmV6IGxhcyBmcm9udGVyYXMgeSB0cmFiYWphbiBjb24gdG9kYXMgbGFzIHZhcmlhbnRlcyBwb3NpYmxlcyBkZSBsYSBuYXJyYWNpw7NuOiBsYSBhdXRvYmlvZ3JhZsOtYSwgZWwgY3VlbnRvIHBvbGljaWFsLCBlbCByZWxhdG8gaGlzdMOzcmljbywgbGEgZmljY2nDs24gdGXDs3JpY2EsIGVsIGRpYXJpbywgZWwgcmVsYXRvIHNlbnRpbWVudGFsLCBlbCBjdWVudG8gZmFudMOhc3RpY28uIFNvbiBsYXMgc3V5YXMgbmFycmFjaW9uZXMgcXVlLCBhZGVtw6FzIGRlIGNvbnRhciBoaXN0b3JpYXMsIGFicmVuIGNhbWlub3MsIGV4cGxvcmFuIGzDrW1pdGVzIHkgcmVmbGV4aW9uYW4gc29icmUgZWwgYXJ0ZSBkZSBjb250YXIgaGlzdG9yaWFzLiBVbmEgdHJhcyBvdHJhIGNvbXBvbmVuIGVsIHJldHJhdG8gZGUgbGEgY2FyYSBCIGRlIHVuIHBhw61zLCBkZSB1bmEgc29jaWVkYWQsIHkgcHJlc2VudGFuIHVuIGFtcGxpbyByZXBlcnRvcmlvIGRlIHBlcnNvbmFqZXMsIGNvbiBlc3BlY2lhbCBxdWVyZW5jaWEgcG9yIGxvcyBwZXJkZWRvcmVzLiBZIGVudHJlIGVzb3MgcGVyc29uYWplcywgdW5vIHJlY3VycmVudGUsIEVtaWxpbyBSZW56aSwgdHJhc3VudG8gZGVsIGF1dG9yIHF1ZSBhc29tYSBwb3IgdG9kYSBzdSBvYnJhLiBDb25zYWdyYWRvIHlhIGVuIHZpZGEgY29tbyB1bm8gZGUgbG9zIGVzY3JpdG9yZXMgZnVuZGFtZW50YWxlcyBkZSBsYSBsaXRlcmF0dXJhIGVuIGVzcGHDsW9sIGRlbCDDumx0aW1vIHRlcmNpbyBkZWwgc2lnbG8gWFggeSBkZSBwcmluY2lwaW9zIGRlbCBYWEksIGxhIGluY29ubWVuc3VyYWJsZSBtYWduaXR1ZCBsaXRlcmFyaWEgZGUgUmljYXJkbyBQaWdsaWEgc2UgaGFjZSB0YW1iacOpbiBwYXRlbnRlIGVuIHN1IG5hcnJhdGl2YSBicmV2ZSwgcG9yIGxvIHF1ZSBlc3RhIGVkaWNpw7NuIGRlIHN1IGN1ZW50w61zdGljYSBjb21wbGV0YSBlcyB1biB2b2x1bWVuIGluZWx1ZGlibGUuIMKrSW5mbHVpZG8gcG9yIE1hY2Vkb25pbyBGZXJuw6FuZGV6LCBSb2JlcnRvIEFybHQsIEpvcmdlIEx1aXMgQm9yZ2VzLCBIZW5yeSBKYW1lcywgQ2VzYXJlIFBhdmVzZSB5IFdpbGxpYW0gRmF1bGtuZXIsIFJpY2FyZG8gUGlnbGlhIHNlIGRlc3BhcnJhbcOzIGNvbiBicmlsbGFudGV6IGVuIGxhIGRvY2VuY2lhLCBsYSBjcsOtdGljYSB5IGVsIGVuc2F5aXNtbyBsaXRlcmFyaW9zLCBhc8OtIGNvbW8gdGFtYmnDqW4gZW4gbGEgZXNjcml0dXJhIGRlIGd1aW9uZXMgcGFyYSBjaW5lIHkgdGVsZXZpc2nDs24geSBlbiBsYSBuYXJyYXRpdmEgYnJldmXCuyAoTWFudWVsIEhpZGFsZ28sIEVsIE11bmRvKS4gwqtVbm8gZGUgbG9zIGVzY3JpdG9yZXMgZW4gZXNwYcOxb2wgbcOhcyBpbXBvcnRhbnRlcyBkZSBsYSBzZWd1bmRhIG1pdGFkIGRlbCBzaWdsbyBYWMK7IChQYXRyaWNpbyBQcm9uKS4gwqtVbiBhdXRvciBpbXByZXNjaW5kaWJsZcK7IChXaW5zdG9uIE1hbnJpcXVlIFNhYm9nYWwsIEVsIFBhw61zKS4gwqtVbiBjb25kZW5hZG8gbWFlc3RybyBkZSBsYXMgZGlzdGFuY2lhcyBjb3J0YXPCuyAoTWF0w61hcyBOw6lzcG9sbywgTGEgTmFjacOzbikuIMKrVW4gY2zDoXNpY28gZGUgbGEgbGl0ZXJhdHVyYSBhcmdlbnRpbmEgY29udGVtcG9yw6FuZWHCuyAoQkJDKS5cIlxuIn0= -->
+<pre><code>[1] &quot;Los cuentos completos de Ricardo Piglia, un clásico contemporáneo de la literatura en lengua española. Este volumen reúne la totalidad de la obra cuentística de Ricardo Piglia, organizada por el propio autor poco antes de morir. La narrativa breve recorre toda su carrera literaria, y aquí encontrará el lector desde su primer volumen de relatos, publicado en 1967 (después revisado y ampliado con nuevos textos), hasta las últimas producciones en este campo, escritas al final de su vida, entre las que destacan Los casos del comisario Croce, homenaje y vuelta de tuerca al género policiaco que tanto amó Piglia. Y entre medio, las dos narraciones largas de Prisión perpetua y los volúmenes Nombre falso –que incluye un prodigioso homenaje a Roberto Arlt– y Cuentos morales. La organización de este libro permite por un lado apreciar la evolución del Piglia cuentista y por el otro disfrutar de su rica versatilidad. Su concepción del género le lleva desde unos inicios en que, según sus propias palabras, tomaba como modelos a Hemingway y Borges, hasta formulaciones cada vez más híbridas, abiertas y heterodoxas de la narración breve: contaminando deliberadamente el relato con la reseña, el cuento con el ensayo o la ficción con la autobiografía, Piglia elabora textos que cruzan una y otra vez las fronteras y trabajan con todas las variantes posibles de la narración: la autobiografía, el cuento policial, el relato histórico, la ficción teórica, el diario, el relato sentimental, el cuento fantástico. Son las suyas narraciones que, además de contar historias, abren caminos, exploran límites y reflexionan sobre el arte de contar historias. Una tras otra componen el retrato de la cara B de un país, de una sociedad, y presentan un amplio repertorio de personajes, con especial querencia por los perdedores. Y entre esos personajes, uno recurrente, Emilio Renzi, trasunto del autor que asoma por toda su obra. Consagrado ya en vida como uno de los escritores fundamentales de la literatura en español del último tercio del siglo XX y de principios del XXI, la inconmensurable magnitud literaria de Ricardo Piglia se hace también patente en su narrativa breve, por lo que esta edición de su cuentística completa es un volumen ineludible. «Influido por Macedonio Fernández, Roberto Arlt, Jorge Luis Borges, Henry James, Cesare Pavese y William Faulkner, Ricardo Piglia se desparramó con brillantez en la docencia, la crítica y el ensayismo literarios, así como también en la escritura de guiones para cine y televisión y en la narrativa breve» (Manuel Hidalgo, El Mundo). «Uno de los escritores en español más importantes de la segunda mitad del siglo XX» (Patricio Pron). «Un autor imprescindible» (Winston Manrique Sabogal, El País). «Un condenado maestro de las distancias cortas» (Matías Néspolo, La Nación). «Un clásico de la literatura argentina contemporánea» (BBC).&quot;</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Por último, tenemos la información de la tablita abajo de la imagen. Podríamos extraer los elementos uno por uno, pero por suerte RVest tiene una función para traer directamente los elementos <strong>table</strong> en formato tibble.</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIHRhYmxhX2luZm8gPC0gbGlicm8gJT4lIFxuICAgICAgICBodG1sX2VsZW1lbnQoXCJ0YWJsZS5uby1wcmludFwiKSAlPiUgXG4gICAgICAgIGh0bWxfdGFibGUoKVxudGFibGFfaW5mb1xuYGBgIn0= -->
+<pre class="r"><code> tabla_info &lt;- libro %&gt;% 
+        html_element(&quot;table.no-print&quot;) %&gt;% 
+        html_table()
+tabla_info</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-frame-begin eyJtZXRhZGF0YSI6eyJjbGFzc2VzIjpbInRibF9kZiIsInRibCIsImRhdGEuZnJhbWUiXSwibnJvdyI6NywibmNvbCI6Miwic3VtbWFyeSI6eyJBIHRpYmJsZSI6WyI3IHggMiJdfX0sInJkZiI6Ikg0c0lBQUFBQUFBQUJsMVJ6MUtDUUJ4ZVVTUXBLNmVaenJ3QXlMOFVqb2lPTVdQSTVPUjQzWkNTaWNBQnJJN1dLM2pyMXIyMzRFMTZpeTdTb3J0TnNUTzdmTC92Ky8zbnVqOVQyQmtMQUtpQ0dycFZHa0ZRTngxSnZwQUJxRkhJcWlDbFVYeGZrTmNaQWdWNWlpNkRoWm8xNmRrWVZ3Y0dnWWZPMU9ITXNjMVpVd09BZFVHMTdPejlTdUQ2QTg3SlhvZVdiVXl3d0pyajBjQTByV3hqWTRZeHMwM2ZHbzZ4ZWVUYzlFYVdhV0NYZi9WYmVsZmpOWlZYRkozWGRhbkRpMWhvSWtGVEVWMndJczUwSUt1Q3puMjlmWktPTlVYRzBya040eGltL2hOTXVJV2ZMTE9QMEhkaGdoM3I5aVhYNmFqWVlxVnVXNVRic2loTHBUM1JJWHowRXR3amhVbHFKdjJpOG1JYmNmUXNrS0JtNGJKR1Q1N24zK1hNYmdBVGtwbVE3QnltVUxpTFVUeXl0cVVRSmxxbWZoU2lJS3I0ZFhRcHVCS1hpSk5WV0hReTU5M0ZLbnpncGFMQVR0NmZKc2JNSDB6dFMxSTVUa1dUZlhuaHZSOTZwUGNBM25vQk5vN1J4THVCaFdYc2h5bVpCTEdKa0VZcEpINnNHd1dFMmMwR3RqOFh3eGJRc2dJQUFBPT0ifQ== -->
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["X1"],"name":[1],"type":["chr"],"align":["left"]},{"label":["X2"],"name":[2],"type":["chr"],"align":["left"]}],"data":[{"1":"ISBN","2":"978-84-339-9916-0"},{"1":"EAN","2":"9788433999160"},{"1":"PVP CON IVA","2":"24.9 \\200"},{"1":"NÚM. DE PÁGINAS","2":"832"},{"1":"COLECCIÓN","2":"Narrativas hispánicas"},{"1":"CÓDIGO","2":"NH 664"},{"1":"PUBLICACIÓN","2":"17/02/2021"}],"options":{"columns":{"min":{},"max":[10],"total":[2]},"rows":{"min":[10],"max":[10],"total":[7]},"pages":{}}}
+  </script>
+</div>
+<!-- rnb-frame-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxudGFibGFfaW5mbyU+JVxuICAgICAgICBwaXZvdF93aWRlcihuYW1lc19mcm9tID0gXCJYMVwiLCB2YWx1ZXNfZnJvbSA9IFwiWDJcIilcbmBgYCJ9 -->
+<pre class="r"><code>tabla_info%&gt;%
+        pivot_wider(names_from = &quot;X1&quot;, values_from = &quot;X2&quot;)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-frame-begin eyJtZXRhZGF0YSI6eyJjbGFzc2VzIjpbInRibF9kZiIsInRibCIsImRhdGEuZnJhbWUiXSwibnJvdyI6MSwibmNvbCI6Nywic3VtbWFyeSI6eyJBIHRpYmJsZSI6WyIxIHggNyJdfX0sInJkZiI6Ikg0c0lBQUFBQUFBQUJsMVJ6VTdDUUJCZWZrcWxpa3BNUFBjRld1aVBRSTlRQ0RiQjBrZ2tYTmRTcFJGYjBoYjFpTDRDTjIvZWZZdStpUThDVG1FMzRtNHk3Y3g4MzdmOXBuUGJuV2pDUkVBSUZWQVJvc0JCaWtxbW82aFhLa0xGUEZRNVFNclordzFZRjVEd0VPY0hRTlZvdHFTV0xtbWFJUm1HMHBEcURLRUNoSllPY0liK2dXaVZnVWVxTGh2aXo4YzNJeXEwTkpXaFh0bzRpbkRpditCWW5QbnhJdjBLZkJmSGpMQmtYNHVOaHM1MEJhVlpxNnMxdGE0cXpGeGNnSjg5ZWdsUG1rVnIxTEdwazE2YnBzZk8yQkhOb1MxYTR6WXhWYlhUenh0WjdQWkVKMzN2VzNaN1JBREJIQTU2cG1tbGE1dDBlRE5kZDYzK2tKUW56bDFuWUpsdFF2bG5xaHlGcnpJMVZvSElyK0N4aGNPNmQrYzRabitCTU1VSmxoOGkwRU8xWVNSOHVFajhNQUJSUGxzbng0aHpFZE00V3dhWms2bmt6cGJCazVSdFJkaHZaWGNxSk04ZDVQeitrL2t0dVlxanUvR0NSei93cVBjNXZ2Zm1wRGlGaVhjRHk0dklEeEk2Q1hSak9Ra1RUSG1DRzg1cFp6Y2IydndDMmZiYUFzWUNBQUE9In0= -->
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["ISBN"],"name":[1],"type":["chr"],"align":["left"]},{"label":["EAN"],"name":[2],"type":["chr"],"align":["left"]},{"label":["PVP CON IVA"],"name":[3],"type":["chr"],"align":["left"]},{"label":["NÚM. DE PÁGINAS"],"name":[4],"type":["chr"],"align":["left"]},{"label":["COLECCIÓN"],"name":[5],"type":["chr"],"align":["left"]},{"label":["CÓDIGO"],"name":[6],"type":["chr"],"align":["left"]},{"label":["PUBLICACIÓN"],"name":[7],"type":["chr"],"align":["left"]}],"data":[{"1":"978-84-339-9916-0","2":"9788433999160","3":"24.9 \\200","4":"832","5":"Narrativas hispánicas","6":"NH 664","7":"17/02/2021"}],"options":{"columns":{"min":{},"max":[10],"total":[7]},"rows":{"min":[10],"max":[10],"total":[1]},"pages":{}}}
+  </script>
+</div>
+<!-- rnb-frame-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 </div>
 
-<div id="rmd-source-code">LS0tDQp0aXRsZTogIldlYiBzY3JhcGluZyBjb24gUlZlc3QiDQpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sNCi0tLQ0KDQojIyBJbnRyb2R1Y2Npw7NuDQoNCllhIHNhYmVtb3MgcXVlIGVuIEludGVybmV0IGhheSB1bmEgY2FudGlkYWQgbWFzaXZhIGRlIGluZm9ybWFjacOzbiBsYSBjdWFsIGUgcHVlZGUgc2VyIHVuYSBncmFuIGZ1ZW50ZSBwYXJhIGxvcyBjYW1wb3MgZGUgZXN0dWRpbyBxdWUgcXVlcnJhbW9zIGFib3JkYXIuIEFob3JhIGJpZW4sIHBhcmEgcG9kZXIgcmVjb2xlY3RhciBlc3RhIGluZm9ybWFjacOzbiBlcyBuZWNlc2FyaW8gYXBsaWNhciBoZXJyYW1pZW50YXMgZGUgd2ViIHNjcmFwaW5nLg0KDQpFc3RhIHTDqWNuaWNhIGJ1c2NhIGxvZ3JhciBsYSBhdXRvbWF0aXphY2nDs24gZGUgbGEgcmVjb2xlY2Npw7NuIGRlIGRhdG9zIGRlIHVuIHNpdGlvLiBFbiBsw61uZWFzIGdlbmVyYWxlcywgbGEgbMOzZ2ljYSBkZWwgcHJvY2VzbyBlcyBsYSBzaWd1aWVudGU6DQoNCjEuIGVudHJhciBhIHVuYSBww6FnaW5hDQoyLiBidXNjYXIgZW4gZWwgY8OzZGlnbyBIVE1MIGxhIGluZm9ybWFjacOzbiBxdWUgbm9zIGludGVyZXNhIHkNCjMuIHBhc2FybGEgYSBhbGfDum4gZm9ybWF0byB0YWJ1bGFyIChmaWxhcyB5IGNvbHVtYXMpDQoNCkFudGVzIGRlIGVtcGV6YXIgYSBhcm1hciB1biBzY3JhcGVyLCBlcyB1bmEgYnVlbmEgcHLDoWN0aWNhIGluc3BlY2Npb25hciBsYSBlc3RydWN0dXJhIGRlbCBzaXRpbyBkZWwgcXVlIHZhbW9zIGEgY29uc3RydWlyIGxhIGluZm9ybWFjacOzbiwgcGFyYSB0ZW5lciB1bmEgaWRlYSBkZSBkw7NuZGUgZXN0w6EgZGljaGEgaW5mb3JtYWNpw7NuLg0KDQpTdXBvbmdhbW9zIHF1ZSBxdWVyZW1vcyBzaXN0ZW1hdGl6YXIgbG9zIGxpYnJvcyBkZSBjYWRhIGF1dG9yIHF1ZSBlc3TDoW4gZGlzcG9uaWJsZXMgZW4gbGEgZWRpdG9yaWFsIEFuYWdyYW1hLiBQb2Ryw61hbW9zIGlyIGEgbGEgbGlicmVyw61hIGRlIGJhcnJpby4uLiBvIGV4dHJhZXIgbG9zIHTDrXR1bG9zIGRlIGxhIFtww6FnaW5hIHdlYl0oaHR0cHM6Ly93d3cuYW5hZ3JhbWEtZWQuZXMvYXV0b3Jlcy9hP3A9MikuIFBhcmEgZXN0ZSBlamVtcGxvLCB2YW1vcyBhIHNjcmFwZWFyIGxvcyB0w610dWxvcyBkZSBbUGF1bCBBdXN0ZXJdKGh0dHBzOi8vd3d3LmFuYWdyYW1hLWVkLmVzL2F1dG9yL2F1c3Rlci1wYXVsLTYyKS4gDQoNCioqKiANCg0KTG9zIGVsZW1lbnRvcyBkZSB1bmEgcMOhZ2luYSB3ZWIgc3VlbGVuIGVzdGFyIGVzY3JpdG9zIGVuIGPDs2RpZ28gSFRNTC4gRWwgSFRNTCBlc3TDoSBjb21wdWVzdG8gcG9yIGRpZmVyZW50ZXMgb2JqZXRvcyBsbGFtYWRvcyB0YWdzIChwb3IgZWplbXBsbyA8ZGl2PiwgPGE+IDx0aXRsZT4sIDxib2R5PiwgYDxoZWFkPmApIHF1ZSB0aWVuZW4gYXRyaWJ1dG9zIDxjbGFzcz4sIDxyZWY+IDxpZD4sIGV0Yy4pLg0KDQpTaSBzZSBmaWphbiwgZWwgdGFnIDxwPiBlc3TDoSDigJxhZGVudHJv4oCdIGRlbCB0YWcgPGRpdj4gY29uIGNsYXNzPWxldHJhLg0KDQpFc3RvIHF1aWVyZSBkZWNpciBxdWUgPHA+IGVzIGVsIGhpam8gKG8gY2hpbGQpIGRlIDxkaXY+LCB5IHF1ZSA8ZGl2PiBlcyBlbCBwYWRyZSAobyBwYXJlbnQpIGRlIDxwPi4gQSBzdSB2ZXosIGxvcyBlbGVtZW50b3MgPHA+IHNvbiBoZXJtYW5vcyAobyBzaWJsaW5ncykgZW50cmUgZWxsb3MsIHkgYXPDrSBzZSBjb21wbGV0YSBsYSBmYW1pbGlhIGRlIEhUTUwu</div>
+<div id="rmd-source-code">LS0tDQp0aXRsZTogIldlYiBzY3JhcGluZyBjb24gUlZlc3QiDQpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sNCi0tLQ0KYGBge3IsIGluY2x1ZGU9RkFMU0V9DQprbml0cjo6b3B0c19jaHVuayRzZXQoZWNobyA9IFRSVUUsIHdhcm5pbmcgPUZBTFNFKQ0KYGBgDQoNCiMjIyBJbnRyb2R1Y2Npw7NuDQoNCllhIHNhYmVtb3MgcXVlIGVuIEludGVybmV0IGhheSB1bmEgY2FudGlkYWQgbWFzaXZhIGRlIGluZm9ybWFjacOzbiBsYSBjdWFsIGUgcHVlZGUgc2VyIHVuYSBncmFuIGZ1ZW50ZSBwYXJhIGxvcyBjYW1wb3MgZGUgZXN0dWRpbyBxdWUgcXVlcnJhbW9zIGFib3JkYXIuIEFob3JhIGJpZW4sIHBhcmEgcG9kZXIgcmVjb2xlY3RhciBlc3RhIGluZm9ybWFjacOzbiBlcyBuZWNlc2FyaW8gYXBsaWNhciBoZXJyYW1pZW50YXMgZGUgd2ViIHNjcmFwaW5nLg0KDQpFc3RhIHTDqWNuaWNhIGJ1c2NhIGxvZ3JhciBsYSBhdXRvbWF0aXphY2nDs24gZGUgbGEgcmVjb2xlY2Npw7NuIGRlIGRhdG9zIGRlIHVuIHNpdGlvLiBFbiBsw61uZWFzIGdlbmVyYWxlcywgbGEgbMOzZ2ljYSBkZWwgcHJvY2VzbyBlcyBsYSBzaWd1aWVudGU6DQoNCjEuIGVudHJhciBhIHVuYSBww6FnaW5hDQoyLiBidXNjYXIgZW4gZWwgY8OzZGlnbyBIVE1MIGxhIGluZm9ybWFjacOzbiBxdWUgbm9zIGludGVyZXNhIHkNCjMuIHBhc2FybGEgYSBhbGfDum4gZm9ybWF0byB0YWJ1bGFyIChmaWxhcyB5IGNvbHVtYXMpDQoNCkFudGVzIGRlIGVtcGV6YXIgYSBhcm1hciB1biBzY3JhcGVyLCBlcyB1bmEgYnVlbmEgcHLDoWN0aWNhIGluc3BlY2Npb25hciBsYSBlc3RydWN0dXJhIGRlbCBzaXRpbyBkZWwgcXVlIHZhbW9zIGEgY29uc3RydWlyIGxhIGluZm9ybWFjacOzbiwgcGFyYSB0ZW5lciB1bmEgaWRlYSBkZSBkw7NuZGUgZXN0w6EgZGljaGEgaW5mb3JtYWNpw7NuLg0KDQpTdXBvbmdhbW9zIHF1ZSBxdWVyZW1vcyBzaXN0ZW1hdGl6YXIgbG9zIGxpYnJvcyBkZSBjYWRhIGF1dG9yIHF1ZSBlc3TDoW4gZGlzcG9uaWJsZXMgZW4gbGEgZWRpdG9yaWFsIEFuYWdyYW1hLiBQb2Ryw61hbW9zIGlyIGEgbGEgbGlicmVyw61hIGRlIGJhcnJpby4uLiBvIGV4dHJhZXIgbG9zIHTDrXR1bG9zIGRlIGxhIFtww6FnaW5hIHdlYl0oaHR0cHM6Ly93d3cuYW5hZ3JhbWEtZWQuZXMvYXV0b3Jlcy9hP3A9MikuIFBhcmEgZXN0ZSBlamVtcGxvLCB2YW1vcyBhIHNjcmFwZWFyIGxvcyB0w610dWxvcyBkZSBbUmljYXJkbyBQaWdsaWFdKGh0dHBzOi8vd3d3LmFuYWdyYW1hLWVkLmVzL2F1dG9yL3BpZ2xpYS1yaWNhcmRvLTg1NikuIA0KDQojIyMgSFRNTA0KDQpFbCBjb250ZW5pZG8geSBsYSBlc3RydWN0dXJhIGRlIHVuYSBww6FnaW5hIHdlYiBlc3TDoSBlc2NyaXRhIGVuIGPDs2RpZ28gSFRNTC4gRWwgSFRNTCBlc3TDoSBjb21wdWVzdG8gcG9yIGRpZmVyZW50ZXMgb2JqZXRvcyBsbGFtYWRvcyB0YWdzIChwb3IgZWplbXBsbyAqKmRpdiwgYSwgYm9keSwgaGVhZCoqKSBxdWUgZXN0w6FuIHJvZGVhZG9zIHBvciBlbCBzw61tYm9sbyA8Pi4gQ2FkYSB0YWcgY3VtcGxlIHVuYSBmdW5jacOzbiBkaWZlcmVudGUgLXkgbG9zIGNvbmp1bnRvcyBkZSB0YWdzIGRhbiBmb3JtYSBhIGxhIHDDoWdpbmEuIA0KDQpBIHN1IHZleiwgdGllbmVuIGF0cmlidXRvcyBpbmRpY2Fkb3MgcG9yIENTUyBxdWUgImVzdGlsaXphbiIgbGEgcMOhZ2luYS4gTG9zIG3DoXMgaW1wb3J0YW50ZXMgcGFyYSBzY3JhcGVhciBzb24gKipjbGFzcyoqLCAqKmhyZWYqKiBlICoqaWQqKi4gDQoNClBhcmEgdmVyIGPDs21vIGVzdMOhIGNvbXB1ZXN0byBlc3RlIGPDs2RpZ28sIGhheSBxdWUgaXIgYSBsYSBww6FnaW5hIHF1ZSBxdWVyZW1vcyB5IGhhY2VyIGNsaWMgZGVyZWNobyArIGluc3BlY2Npb25hci4gSWRlbnRpZmljYXIgbGEgdWJpY2FjacOzbiBkZSBlc3RvcyBlbGVtZW50b3MgaHRtbCBlcyBuZWNlc2FyaW8gcGFyYSB2ZXIgZMOzbmRlIGVzdMOhIGxhIGluZm9ybWFjacOzbiBxdWUgcXVlcmVtb3MgY29uc2VndWlyIHkgcGVuc2FyIGxhIGzDs2dpY2EgZGUgcG9yIHF1w6kgbGFkbyBsYSB2YW1vcyBhIGFnYXJyYXIuIA0KDQpFbiBudWVzdHJvIGNhc28sIG5lY2VzaXRhbW9zIGNvbnNlZ3VpciBkZSBlc3RhIHDDoWdpbmEgdW4gbGlzdGFkbyBkZSBsb3MgbGlua3MgZGUgY2FkYSBsaWJyby4gU2kgc2UgZmlqYW4sIGVsIHRhZyAqKnNwYW4qKiBjb24gZWwgdMOtdHVsbyBkZWwgbGlicm8gZXN0w6Eg4oCcYWRlbnRyb+KAnSBkZWwgdGFnICoqZGl2KiogY29uICoqJ2NsYXNzID0gbGlicm8tdmVydGljYWxfX2luZm8nKiogLiBFbCBsaW5rIGVzdMOhIGRlbnRybyBkZWwgbWlzbW8gKipkaXYqKiBwZXJvIGVuIGVsIGF0cmlidXRvICoqYSoqLiBMb3MgZWxlbWVudG9zIGVzdMOhbiAqYW5pZGFkb3MqLiANCg0KIyMjIExhIGhlcnJhbWllbnRhOiBSVmVzdA0KDQpQYXJhIGhhY2VyIGVsIHNjcmFwZW8gdmFtb3MgYSB1c2FyIGxhIGxpYnJlcsOtYSAqKlJWZXN0KiouIExhIGltcG9ydGFtb3MgYSBlbGxhIHkgb3RyYXMgbGlicmVyw61hcyBhdXhpbGlhcmVzIHF1ZSBub3MgdmFuIGEgc2VydmlyLiANCmBgYHtyLCBldmFsPUZBTFNFfQ0KbGlicmFyeShydmVzdCkNCmxpYnJhcnkodGlkeXZlcnNlKQ0KYGBgDQoNCkxvIHByaW1lcm8gcXVlIGhheSBxdWUgaGFjZXIgZXMgImxlZXIiIGxhIHDDoWdpbmEgaHRtbCBwYXJhIGltcG9ydGFybGEgYSBSLiANCg0KYGBge3J9DQpwaWdsaWEgPC0gcmVhZF9odG1sKCJodHRwczovL3d3dy5hbmFncmFtYS1lZC5lcy9hdXRvci9waWdsaWEtcmljYXJkby04NTYiKQ0KDQpwaWdsaWENCmBgYA0KDQpMYSBmdW5jacOzbiAqKnJlYWRfaHRtbCgpKiogZGV2dWVsdmUgdW5hIGxpc3RhIHF1ZSBjb250aWVuZSBsYSBlc3RydWN0dXJhIGFyYm9sYWRhIGRlIEhUTUwgcXVlIG1lbmNpb25hbW9zIGFudGVzLiBQb3Igc3VlcnRlIFJWZXN0IHVzYSBsYSBsw7NnaWNhIGRlIGxvcyBwaXBlcyBwYXJhIGFjY2VkZXIgYSBlc3RvcyBlbGVtZW50b3MsIHBvciBsbyBxdWUgcGFyYSBlbmNvbnRyYXIgbG8gcXVlIHF1ZXJlbW9zIHBvZGVtb3MgdXNhciBsYSBmdW5jaW9uICoqaHRtbF9lbGVtZW50cygpKiouIEVzdGEgaWRlbnRpZmljYSBsb3MgZWxlbWVudG9zIHF1ZSBidXNjYW1vcyBzZWfDum4gWFBhdGggbyBbc2VsZWN0b3JlcyBDU1NdKGh0dHBzOi8vd3d3Lnczc2Nob29scy5jb20vY3NzcmVmL2Nzc19zZWxlY3RvcnMuYXNwKS4gQ29tbyBwb2RlbW9zIGVuY29udHJhciBsbyBxdWUgcXVlcsOtYW1vcyBpZGVudGlmaWPDoW5kb2xvIHBvciB1bmEgY2xhc2Ugw7puaWNhLCB2YW1vcyBhIHVzYXIgQ1NTLiANCg0KYGBge3J9DQpsaWJyb3MgPC0gcGlnbGlhICU+JSBodG1sX2VsZW1lbnRzKCIubGlicm8tdmVydGljYWxfX2luZm8iKSU+JSANCiAgICAgICAgaHRtbF9lbGVtZW50cygiYSIpJT4lIA0KICAgICAgICBodG1sX2F0dHIoImhyZWYiKQ0KYGBgDQoNCsK/UXXDqSBzZSBlc3TDoSBoYWNpZW5kbyBhY8OhPyBQcmltZXJvLCBsZSBwaWRvIGFsIHBhcXVldGUgcXVlIHRyYWlnYSB0b2RvcyBsb3MgZWxlbWVudG9zIGN1eW8gYXRyaWJ1dG8gY2xhc3MgZXMgKipsaWJyby12ZXJ0aWNhbF9faW5mbyoqIC4gU2lndWllbmRvIGxhIGzDs2dpY2EgZGUgw6FyYm9sIHkgZWxlbWVudG9zIGFuaWRhZG9zLCBjb24gdW4gcGlwZSBsZSBwdWVkbyBpbmRpY2FyIHF1ZSAtZGVudHJvIGRlIGVzb3MgZWxlbWVudG9zIHF1ZSBlbmNvbnRyw7MtIG1lIHRyYWlnYSBhcXVlbGxvcyBlbGVtZW50b3MgKiphKiouIEZpbmFsbWVudGUsIGRlIGVzb3MgZWxlbWVudG9zLCBsZSBwaWRvIHF1ZSBtZSB0cmFpZ2EgZWwgYXRyaWJ1dG8gaHJlZiBxdWUgZXMgZWwgcXVlIGNvbnRpZW5lIGVsIGxpbmsuIA0KDQpFc3RvIG5vcyBkZXZ1ZWx2ZSB1biBsaXN0YWRvIGRlIGxvcyBsaW5rcyBkZSBsb3MgbGlicm9zOg0KDQpgYGB7cn0NCmhlYWQobGlicm9zKQ0KDQpsaWJyb3NfbGlua3MgPC0gcGFzdGUwKCJodHRwczovL3d3dy5hbmFncmFtYS1lZC5lcyIsIGxpYnJvcykNCmBgYA0KDQpBaG9yYSBxdWUgdGVuZW1vcyBlbCBsaXN0YWRvIHNvYnJlIGVsIGN1YWwgcXVlcmVtb3MgaXRlcmFyLCBoYXkgcXVlIHJldmlzYXIgbGEgcMOhZ2luYSBkZSBjYWRhIGxpYnJvIHBhcmEgdmVyIGxhIGluZm9ybWFjacOzbiBxdWUgdGllbmUuIEVuIHByaW5jaXBpbywgcG9kZW1vcyBkZXN0YWNhciAzIGVsZW1lbnRvcyBkZSBudWVzdHJvIGludGVyw6lzOiANCg0KMS4gZWwgdMOtdHVsbw0KMi4gZWwgcmVzdW1lbg0KMy4gbGEgdGFibGEgY29uIGlkZW50aWZpY2Fkb3IgZGVsIGxpYnJvLCBlbCBwcmVjaW8sIGxhIGNhbnRpZGFkIGRlIHDDoWdpbmFzLCBsYSBjb2xlY2Npw7NuIHkgbGEgZmVjaGEgZGUgcHVibGljYWNpw7NuDQoNClNpZ3VpZW5kbyBsYSBsw7NnaWNhIGFudGVyaW9yLCBwb2RlbW9zIG9ic2VydmFyIHF1ZSBlbCB0w610dWxvIGVzdMOhIGVuIGVsIGVsZW1lbnRvICoqaDIqKi4gwr9RdcOpIHBhc2EgY3VhbmRvIGxvIHNlbGVjY2lvbmFtb3Mgw7puaWNhbWVudGUgcG9yIGVsPyANCmBgYHtyfQ0KbGlicm8gPC0gcmVhZF9odG1sKGxpYnJvc19saW5rc1sxXSkNCg0KbGlicm8gJT4lIGh0bWxfZWxlbWVudHMoImgxIikNCmBgYA0KTGEgcMOhZ2luYSBub3MgdHJhZSB0YW1iacOpbiBlbCBib3TDs24gcGFyYSBzdXNjcmliaXJzZS4gUG9yIGVzbywgdmFtb3MgYSBlc3BlY2lmaWNhciBsYSBiw7pzcXVlZGEgcGlkacOpbmRvbGUgYSBSVmVzdCBxdWUgbm9zIHRyYWlnYSBsb3MgZWxlbWVudG9zICoqaDIqKiBjb24gKipjbGFzcyB0aXR1bG8tbGlicm8qKi4gDQoNCkNvbiAqKmh0bWxfdGV4dDIoKSoqIGV4dHJhZW1vcyBlbCB0ZXh0byBkZWwgZWxlbWVudG8uIA0KYGBge3J9DQpsaWJybyAlPiUgaHRtbF9lbGVtZW50cygiaDEudGl0dWxvLWxpYnJvIikgJT4lIA0KICAgICAgICBodG1sX3RleHQyKCkNCmBgYA0KVmFtb3MgYSBoYWNlciBsbyBtaXNtbyBwYXJhIGVsIHJlc3VtZW46IGVzdGUgbG8gaWRlbnRpZmljYW1vcyBwb3JxdWUgZXN0w6EgZW4gZWwgZWxlbWVudG8gZGl2IGNvbiBjbGFzZSB0ZXh0Q29udGVudC4gDQpgYGB7cn0NCmxpYnJvICU+JSBodG1sX2VsZW1lbnQoIi50ZXh0Q29udGVudCIpJT4lDQogICAgICAgIGh0bWxfdGV4dDIoKSU+JQ0KICAgICAgICBzdHJfc3F1aXNoKCkgI0JvcnJhbW9zIGxvcyBlc3BhY2lvcyBlbiBibGFuY28gZGUgbcOhcw0KYGBgDQpQb3Igw7psdGltbywgdGVuZW1vcyBsYSBpbmZvcm1hY2nDs24gZGUgbGEgdGFibGl0YSBhYmFqbyBkZSBsYSBpbWFnZW4uIFBvZHLDrWFtb3MgZXh0cmFlciBsb3MgZWxlbWVudG9zIHVubyBwb3IgdW5vLCBwZXJvIHBvciBzdWVydGUgUlZlc3QgdGllbmUgdW5hIGZ1bmNpw7NuIHBhcmEgdHJhZXIgZGlyZWN0YW1lbnRlIGxvcyBlbGVtZW50b3MgKip0YWJsZSoqIGVuIGZvcm1hdG8gdGliYmxlLiANCmBgYHtyfQ0KIHRhYmxhX2luZm8gPC0gbGlicm8gJT4lIA0KICAgICAgICBodG1sX2VsZW1lbnQoInRhYmxlLm5vLXByaW50IikgJT4lIA0KICAgICAgICBodG1sX3RhYmxlKCkNCnRhYmxhX2luZm8NCmBgYA0KDQpgYGB7cn0NCnRhYmxhX2luZm8lPiUNCiAgICAgICAgcGl2b3Rfd2lkZXIobmFtZXNfZnJvbSA9ICJYMSIsIHZhbHVlc19mcm9tID0gIlgyIikNCmBgYA0KDQo=</div>
 
 
 
