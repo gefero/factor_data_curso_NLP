@@ -33,11 +33,10 @@ libros_links <- paste0("https://www.anagrama-ed.es", libros)
 
 libros_links <- libros_links[1:3]
 
-df <- data.frame()
 titulos <- c()
 resumenes <- c()
 info_extra <- data.frame(isbn = numeric(), ean  = numeric(), precio = character(), 
-                         paginas  = numeric(), fecha_publicacion = character())
+                         paginas  = numeric(), fecha_publicacion = character(), coleccion = character())
 
 for (l in libros_links){
         

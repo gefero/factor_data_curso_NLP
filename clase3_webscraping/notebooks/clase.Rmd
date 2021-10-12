@@ -20,7 +20,7 @@ Antes de empezar a armar un scraper, es una buena práctica inspeccionar la estr
 
 Supongamos que queremos sistematizar los libros de cada autor que están disponibles en la editorial Anagrama. Podríamos ir a la librería de barrio... o extraer los títulos de la [página web](https://www.anagrama-ed.es/autores/a?p=2). Para este ejemplo, vamos a scrapear los títulos de [Ricardo Piglia](https://www.anagrama-ed.es/autor/piglia-ricardo-856). 
 
-### HTML
+### HTML + CSS
 
 El contenido y la estructura de una página web está escrita en código HTML. El HTML está compuesto por diferentes objetos llamados tags (por ejemplo **div, a, body, head**) que están rodeados por el símbolo <>. Cada tag cumple una función diferente -y los conjuntos de tags dan forma a la página. 
 
@@ -28,7 +28,7 @@ A su vez, tienen atributos indicados por CSS que "estilizan" la página. Los má
 
 Para ver cómo está compuesto este código, hay que ir a la página que queremos y hacer clic derecho + inspeccionar. Identificar la ubicación de estos elementos html es necesario para ver dónde está la información que queremos conseguir y pensar la lógica de por qué lado la vamos a agarrar. 
 
-En nuestro caso, necesitamos conseguir de esta página un listado de los links de cada libro. Si se fijan, el tag **span** con el título del libro está “adentro” del tag **div** con **'class = libro-vertical__info'** . El link está dentro del mismo **div** pero en el atributo **a**. Los elementos están *anidados*. 
+En nuestro caso, necesitamos conseguir de esta página un listado de los links de cada libro. Si se fijan, el tag **span** con el título del libro está “adentro” del tag **div** cuya class tiene **libro-vertical__info'** . El link está dentro del mismo **div** pero en el atributo **a**. Los elementos están *anidados*. 
 
 ### La herramienta: RVest
 
@@ -68,7 +68,11 @@ Ahora que tenemos el listado sobre el cual queremos iterar, hay que revisar la p
 
 1. el título
 2. el resumen
-3. la tabla con identificador del libro, el precio, la cantidad de páginas, la colección y la fecha de publicación
+3. el identificador del libro
+4. el precio
+5. la cantidad de páginas
+6. la colección a la que pertenece
+7. la fecha de publicación
 
 Siguiendo la lógica anterior, podemos observar que el título está en el elemento **h2**. ¿Qué pasa cuando lo seleccionamos únicamente por el? 
 ```{r}
@@ -89,16 +93,151 @@ libro %>% html_element(".textContent")%>%
         html_text2()%>%
         str_squish() #Borramos los espacios en blanco de más
 ```
-Por último, tenemos la información de la tablita abajo de la imagen. Podríamos extraer los elementos uno por uno, pero por suerte RVest tiene una función para traer directamente los elementos **table** en formato tibble. 
+Finalmente, podemos ver que hay un compilado de información que nos interesa (cantidad de páginas, fecha de publicación, colección, identificador) en una tabla debajo de la imagen de la tapa. Podríamos extraer los elementos uno por uno como veníamos haciendo, pero RVest tiene una función para traer directamente los elementos **table** en formato tibble. 
 ```{r}
  tabla_info <- libro %>% 
         html_element("table.no-print") %>% 
         html_table()
 tabla_info
 ```
-
+Pivoteamos para darle formato. 
 ```{r}
 tabla_info%>%
-        pivot_wider(names_from = "X1", values_from = "X2")
+        pivot_wider(names_from = "X1", values_from = "X2") %>%
+        rename("isbn" = "ISBN",
+               "ean" = "EAN",
+               "precio" = "PVP CON IVA",
+               "paginas" = "NÚM. DE PÁGINAS",
+               "fecha_publicacion" = "PUBLICACIÓN",
+               "coleccion" = "COLECCIÓN") %>%
+        select(-CÓDIGO)
 ```
+### Sistematizando el scrapeo
+
+Ahora que identificamos cómo buscar estos elementos uno por uno en la página hay que sistematizar una función que loopee el listado de links que tenemos para encontrar esos elementos. Probemos esta función a ver qué pasa:
+
+```{r}
+scrapeo_anagrama <- function(listado_links){
+
+        #Creo listas y dataframes auxiliares donde voy a ir guardando la data. 
+        titulos <- c()
+        resumenes <- c()
+        info_extra <- data.frame(isbn = numeric(), ean  = numeric(), precio = character(), 
+                                 paginas  = numeric(), fecha_publicacion = character(), coleccion = character())
+        
+        for (l in libros_links){
+                
+                libro <- read_html(l)
+                
+                print(paste0("Voy por libro ", l))
+                
+                titulo <- libro %>% html_elements("h1.titulo-libro") %>% 
+                        html_text2()
+                
+                titulos <- append(titulos, titulo)
+                
+                resumen <- libro %>% html_element(".textContent")%>%
+                        html_text()%>%
+                        str_squish()%>%
+                        str_replace("Título descatalogado.", "")
+                
+                resumenes <- append(resumenes, resumen)
+                
+                tabla_info <- libro %>% 
+                        html_element("table.no-print") %>% 
+                        html_table() 
+                
+                tabla_info <- tabla_info%>%
+                        pivot_wider(names_from = "X1", values_from = "X2") %>%
+                        rename("isbn" = "ISBN",
+                               "ean" = "EAN",
+                               "precio" = "PVP CON IVA",
+                               "paginas" = "NÚM. DE PÁGINAS",
+                               "fecha_publicacion" = "PUBLICACIÓN",
+                               "coleccion" = "COLECCIÓN") %>%
+                        select(isbn, ean, precio, paginas, fecha_publicacion, coleccion)
+                
+                info_extra <- rbind(info_extra, tabla_info)
+                
+        }
+        
+        df <- data.frame(cbind(titulos, resumenes, info_extra)) #Junto en un dataframe la info conseguida
+        
+        return(df)
+}
+
+scrapeo_anagrama(libros_links)
+```
+
+Nos encontramos con algo que suele pasar bastante en el scrapeo: hay una página que rompe el formato que veníamos usando. En este caso, Crítica y Ficción no tiene el número de páginas en la tabla. Por eso vamos a usar la función tryCatch(), que nos sirve para indicar qué hacer en caso de toparnos con un error sin que se rompa la función. 
+
+```{r}
+scrapeo_anagrama <- function(listado_links){
+
+        #Creo listas y dataframes auxiliares donde voy a ir guardando la data. 
+        titulos <- c()
+        resumenes <- c()
+        info_extra <- data.frame(isbn = numeric(), ean  = numeric(), precio = character(), 
+                                 paginas  = numeric(), fecha_publicacion = character(), coleccion = character())
+        
+        for (l in libros_links){
+                
+                libro <- read_html(l)
+                
+                print(paste0("Voy por libro ", l))
+                
+                titulo <- libro %>% html_elements("h1.titulo-libro") %>% 
+                        html_text2()
+                
+                titulos <- append(titulos, titulo)
+                
+                resumen <- libro %>% html_element(".textContent")%>%
+                        html_text()%>%
+                        str_squish()%>%
+                        str_replace("Título descatalogado.", "")
+                
+                resumenes <- append(resumenes, resumen)
+                
+                tabla_info <- libro %>% 
+                        html_element("table.no-print") %>% 
+                        html_table() 
+                
+                tabla_info <-  tryCatch(
+                    {
+                    tabla_info%>%
+                        pivot_wider(names_from = "X1", values_from = "X2") %>%
+                        rename("isbn" = "ISBN",
+                               "ean" = "EAN",
+                               "precio" = "PVP CON IVA",
+                               "paginas" = "NÚM. DE PÁGINAS",
+                               "fecha_publicacion" = "PUBLICACIÓN",
+                               "coleccion" = "COLECCIÓN") %>%
+                        select(isbn, ean, precio, paginas, fecha_publicacion, coleccion)
+                        },
+                    error = function(e){
+                    tabla_info%>%
+                        pivot_wider(names_from = "X1", values_from = "X2") %>%
+                        rename("isbn" = "ISBN",
+                               "ean" = "EAN",
+                               "precio" = "PVP CON IVA",
+                               "fecha_publicacion" = "PUBLICACIÓN",
+                               "coleccion" = "COLECCIÓN") %>%
+                        select(isbn, ean, precio, fecha_publicacion, coleccion)%>%
+                        mutate(paginas = "No disponibles")
+                        }
+                    )
+                info_extra <- rbind(info_extra, tabla_info)
+                
+        }
+        
+        df <- data.frame(cbind(titulos, resumenes, info_extra)) #Junto en un dataframe la info conseguida
+        
+        return(df)
+}
+
+scrapeo_anagrama(libros_links)
+```
+
+```
+
 
