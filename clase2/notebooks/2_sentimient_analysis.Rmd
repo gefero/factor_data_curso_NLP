@@ -150,4 +150,13 @@ ggplot(tidy_renzi_sent_kag, aes(entry_number, sentiment, color=tomo)) +
 ```
 
 
-¿Qué se puede ver acá=
+¿Qué se puede ver acá? Se ve cómo los primeros años tienen unas cuántas entradas muy negativas. "Los años felices" parecen estar más equilibrados. 
+Por último, el tomo III que abarca los años de la dictadura y la enfermedad de Piglia tiene unas cuantas entradas sumamente negativas.
+
+### Ejercicio. 
+Replicar el análisis de sentimento con el lexicon construido por el LIIA. Comparar los resultados.
+
+```{r}
+###
+```
+
