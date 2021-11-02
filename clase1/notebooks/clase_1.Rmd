@@ -126,12 +126,25 @@ marx_engels_tidy <- marx_engels_tidy %>%
 ```
 
 Fíjense cómo pasamos de aprimadamente 1.000.000 de palabras a 529.000 luego de eliminar las stop_words.
+
 Ahora bien, ¿cuáles son las palabras más usadas por Marx y Engels?
 
 ```{r}
 marx_engels_tidy %>%
         count(word, sort=TRUE)
 ```
+
+-------
+
+### Actividad
+
+Escribir el código para replicar la tabla anterior usando los comandos del `tidyverse`
+
+```{r}
+###
+```
+
+-------
 
 Debido a que hemos estado usando herramientas ordenadas, nuestros recuentos de palabras se almacenan en un marco de datos ordenado. Esto nos permite canalizar esto directamente al paquete `ggplot2`, por ejemplo, para crear una visualización de las palabras más comunes:
 
@@ -147,7 +160,6 @@ marx_engels_tidy %>%
 ```
 
 Podríamos evaluar ahora si Marx y Engels usan diferentes palabras en las cargas y notas y en sus libros. Para ello vamos a tener que procesar un poco el campo de `titulo`:
-
 
 ```{r}
 marx_engels_tidy <- marx_engels_tidy %>%
@@ -169,6 +181,7 @@ freqs <- marx_engels_tidy %>%
                 prop = n/total*100) %>%
         select(tipo, word, prop) %>%
         pivot_wider(names_from = tipo, values_from = prop)
+
 freqs
 ```
 
@@ -187,12 +200,16 @@ ggplot( aes(notas, libros)) +
 
 Las palabras que están cerca de la línea en estos gráficos tienen frecuencias similares en ambos conjuntos de textos, por ejemplo, tanto en los libros de Marx y Engels como en las aparecen con frecuencias simialres: burguesa, acción, campesinos, abolición, comuna, producción, clase. En cambio, en los libros parecen aparecer palabras como esencia, concepto, hegel, indidiuo, fenomenología, misterio. En las notas periodísitcas aparece notablemente palabras ligadas a la acción política: congreso, consejo, internacional, liga, estatutos, etc.
 
+-------
 
 ### Actividad
 Repetir el ejercicio comparando las cartas con los libros
 
 ```{r}
-
+###
 ```
+
+-------
+
 
 
