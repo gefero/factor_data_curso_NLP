@@ -20,7 +20,7 @@ discursos <- discursos %>%
         mutate( autor = case_when(
                         grepl('cristina-fernandez-de-kirchner', path) ~ 'Cristina Fernandez de Kirchner',
                         grepl('nestor-kirchner', path) ~ 'Nestor Kirchner',
-                        grepl('mauricio-macro', path) ~ 'Mauricio Macri'),
+                        grepl('mauricio-macri', path) ~ 'Mauricio Macri'),
                 fecha_str = str_replace_all(str_extract(path, "\\d*_\\d+_\\d*"), '_', '/'),
                 fecha_iso = lubridate::ymd(fecha_str),
                 fecha_mes = lubridate::format_ISO8601(fecha_iso, precision = "ym"),
