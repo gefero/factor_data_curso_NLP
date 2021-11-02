@@ -41,6 +41,7 @@ marx
 ¿Qué formato de los que vimos hasta aquí sería este?
 
 Para poder analizarlo como datos tidy, primero tenemos que llevarlo a un dataframe.
+
 ```{r}
 marx_df <- tibble(line = 1, text = marx)
 marx_df

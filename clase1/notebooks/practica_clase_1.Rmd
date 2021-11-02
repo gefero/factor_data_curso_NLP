@@ -1,0 +1,54 @@
+---
+title: "Clase 1. Práctica independiente"
+output: html_notebook
+---
+
+Vamos a trabajar con unos 340 textos de Lenin y Rosa Luxemburgo (también provenientes del dataset que Diego Kosloski escrapeó del Marxist Internet Archive).
+
+```{r, results='hide'}
+library(tidyverse)
+library(tidytext)
+```
+
+## 1. Cargamos los datos
+
+```{r}
+rosa_lenin <- read_csv('../data/lenin_luxemburgo.csv')
+```
+
+## 2. Construimos la tabla de tokens del texto
+
+```{r}
+###
+```
+
+## 3. Eliminamos stopwords
+
+Primero cargamos el diccionario de stopwords
+
+```{r}
+stop_words <- read_csv('../data/stop_words_complete.csv', col_names=FALSE) %>%
+        rename(word = X1) %>%
+        mutate(word = stringi::stri_trans_general(word, "Latin-ASCII"))
+```
+Ahora sí, podemos proceder a la eliminación:
+
+```{r}
+###     
+```
+
+
+## 4. ¿Cuáles son las palabras más usadas en el dataset?
+
+```{r}
+###
+```
+
+
+## 5. ¿Se observa alguna diferencia entre las palabras que usan Rosa y Lenin?
+
+```{r}
+###
+```
+
+
