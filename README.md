@@ -17,6 +17,8 @@ En las ciencias sociales argentinas el análisis de textos parece haber estado c
 - [Explicación y práctica - Notebook](/clase1/notebooks/clase_1.nb.html)
 - [Explicación y práctica - RMarkdown](/clase1/notebooks/clase_1.Rmd)
 - [Slides - pdf](/clase1/DIPLO_TM_Clase_1.pdf)
+- [Práctica Independiente - RMarkdown](/clase1/notebooks/practica_clase_1.Rmd)
+- [Práctica Independiente - Notebook](/clase1/notebooks/practica_clase_1.nb.html)
 
 Pueden descargarse la totalidad de los materiales del repositorio para trabajar en un único archivo .zip
 
