@@ -1,4 +1,4 @@
-[![](imgs/logo-factor-data-solo.jpg)]
+![](/imgs/logo-factor-data-solo.jpg)
 
 # [Germán Rosati](gefero.github.io)
 
