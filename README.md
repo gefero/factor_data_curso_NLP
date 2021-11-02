@@ -25,7 +25,7 @@ Pueden descargarse la totalidad de los materiales del repositorio para trabajar 
 - [Sentiment Analysis - Explicación y práctica - RMarkdown](/clase2/notebooks/2_sentimient_analysis.Rmd)
 - [TF-IDF - Explicación y práctica - Notebook](/clase2/notebooks/21_tfidf.nb.html)
 - [TF-IDF - Explicación y práctica - RMarkdown](/clase2/notebooks/21_tfidf.Rmd)
-- [Slides - pdf](/clase1/DIPLO_TM_Clase_2.pdf)
+- [Slides - pdf](/clase2/DIPLO_TM_Clase_2.pdf)
 
 Pueden descargarse la totalidad de los materiales del repositorio para trabajar en un único archivo .zip
 
