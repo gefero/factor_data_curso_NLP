@@ -13,16 +13,27 @@ En las ciencias sociales argentinas el análisis de textos parece haber estado c
 
 - [Explicación y práctica - Notebook](/clase1/notebooks/clase_1.nb.html)
 - [Explicación y práctica - RMarkdown](/clase1/notebooks/clase_1.Rmd)
-- [Slides Intro ML - pdf](/clase1/DIPLO_TM_Clase_1.pdf)
+- [Slides - pdf](/clase1/DIPLO_TM_Clase_1.pdf)
 
 Pueden descargarse la totalidad de los materiales del repositorio para trabajar en un único archivo .zip
 
-- [![](imgs/Download.png)](clase1.zip)
+[![](imgs/Download.png)](clase1.zip)
 
 
 ## Clase 2. ¿Cómo vectorizar textos? Contando palabras y extrayendo conclusiones de un corpus. Bag of Words. Term-frequency matrix: conteos crudos y ponderación TF-IDF. Análisis de sentimientos sobre un corpus. 
+- [Sentiment Analysis - Explicación y práctica - Notebook](/clase2/notebooks/2_sentimient_analysis.nb.html)
+- [Sentiment Analysis - Explicación y práctica - RMarkdown](/clase2/notebooks/2_sentimient_analysis.Rmd)
+- [TF-IDF - Explicación y práctica - Notebook](/clase2/notebooks/21_tfidf.nb.html)
+- [TF-IDF - Explicación y práctica - RMarkdown](/clase2/notebooks/21_tfidf.Rmd)
+- [Slides - pdf](/clase1/DIPLO_TM_Clase_2.pdf)
+
+Pueden descargarse la totalidad de los materiales del repositorio para trabajar en un único archivo .zip
+
+[![](imgs/Download.png)](clase2.zip)
+
 
 ## Clase 3. Web Scraping
+
 
 ## Clase 4. ¿Cómo detectar temas en corpus I? Introducción al modelado de tópicos. Latent Semantic Analysis (LSA) y Latent Dirichlet Allocation (LDA)
 
