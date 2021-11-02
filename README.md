@@ -1,4 +1,4 @@
-[![](imgs/logo-factor-data-solo)]
+[![](imgs/logo-factor-data-solo.jpg)]
 
 # [Germán Rosati](gefero.github.io)
 
@@ -17,7 +17,7 @@ En las ciencias sociales argentinas el análisis de textos parece haber estado c
 
 Pueden descargarse la totalidad de los materiales del repositorio para trabajar en un único archivo .zip
 
-- [![](imgs/Download.png)](clase_1.zip)
+- [![](imgs/Download.png)](clase1.zip)
 
 
 ## Clase 2. ¿Cómo vectorizar textos? Contando palabras y extrayendo conclusiones de un corpus. Bag of Words. Term-frequency matrix: conteos crudos y ponderación TF-IDF. Análisis de sentimientos sobre un corpus. 
