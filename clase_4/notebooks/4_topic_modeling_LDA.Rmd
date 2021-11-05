@@ -20,7 +20,7 @@ Hay una gran cantidad de métodos de modelados de tópicos, hoy vamos a ver uno 
 ![](https://www.tidytextmining.com/images/tmwr_0601.png)
 
 
-## Latent Dirichlet Allocation (LDA). ¿De qué hablan los presidentes en Argentina?
+## Latent Dirichlet Allocation (LDA). Analizando revistas para mujeres y para hombres
 
 LDA es uno de los algoritmos más comunes para el modelado de tópicos Sin sumergirnos en las matemáticas detrás del modelo, podemos entenderlo como guiado por dos principios.
 
@@ -155,7 +155,8 @@ toc()
 Vemos que entrenar el modelo es simple: una línea de código. Lo difícil viene ahora.
 
 ### La interpretación
-
+#### Probabilidad de cada palabra en cada tópico
+Lo primero que vamos a hacer es tomar la distribución de palabras para cada tópico. Para construir esa distribución vamos a tomar la matriz `beta` que está dentro del objeto `stm`:
 
 ```{r}
 ap_topics <- tidy(lda_2, matrix = "beta")
@@ -164,12 +165,12 @@ ap_topics
 
 La funciín `tidy`conviritó el modelo a un formato de un tópico-término por fila. Para cada combinación, el modelo calcula la probabilidad de que ese término se genere a partir de ese tópico. Por ejemplo, el término "cesped" tiene una probabilidad de 3.21x10-13  de ser generado a partir del tema 1. Esta valor baja sensiblemente en el resto de los tópicos.
 
-Podríamos usar el `slice_max()` de `dplyr` para encontrar los 15 términos que son más comunes dentro de cada tema. Como marco de datos ordenado, esto se presta bien a una visualización de `ggplot2`.
+Podríamos usar el `slice_max()` de `dplyr` para encontrar los 15 términos que son más comunes dentro de cada tema. Dado que tenemos una tibble, podemos usar una visualización de `ggplot2`.
 
 ```{r}
 ap_top_terms <- ap_topics %>%
   group_by(topic) %>%
-  slice_max(beta, n = 20) %>% 
+  slice_max(beta, n = 15) %>% 
   ungroup() %>%
   arrange(topic, -beta)
 
@@ -183,52 +184,119 @@ ap_top_terms %>%
   theme_minimal()
 ```
 
-EXPLICAR
+Pareciera que hay dos conjuntos de palabras que tiene un tema bien definido: 
+- el tema 3 parece hablar de cuestiones vinculadas al cuidado del cuerpo (dietas, moda, etc.)
+- el 4 parece hablar de restaurantes, comidas, vinos, etc.
+
+En cambio, los teas 1 y 2 no parecen tener un sentido tan definido. El 1 parece hablar de cuestiones de pareja y el dos de viajes y familia.
+
+Esto parece un primer indicador de que deberíamos pensar en utilizar un número de tópicos más elevado. No obstante aprovechemos este ejemplo de cuatro tópicos para ver algunas cuestiones más.
+
+La visualización anterior nos permite marcar una observación importante sobre las palabras en cada tema es que algunas palabras, como "mundo" y "vida", son comunes a más de un tema. Ésta es una ventaja del modelado de temas en comparación con los métodos de "agrupamiento duro": los temas utilizados en lenguaje natural podrían tener cierta superposición en términos de palabras.
+
+Como alternativa, podríamos considerar los términos que tuvieran la mayor diferencia en
+$\beta$  entre el tema 3 y el tema 4 (que son los que mejor podemos interpretar). Esto se puede estimar en función de la relación logarítmica de los dos: $log_2(\frac{\beta_{4}}{\beta_{3}})$. Utilizar una relación logarítmica es útil porque hace que la diferencia sea simétrica: si $\beta_{3}$ fuera dos veces mayor produce un log ratio de 1, mientras que si $\beta_{4}$ es el doble, el resultado es -1). Para restringirlo a un conjunto de palabras especialmente relevantes, podemos filtrar por palabras relativamente comunes, como aquellas que tienen un $\beta$ mayor que 1/1000 en al menos un tema.
+
+```{r}
+beta_wide <- ap_topics %>%
+  mutate(topic = paste0("topic", topic)) %>%
+  pivot_wider(names_from = topic, values_from = beta) %>% 
+  filter(topic3 > .002 | topic4 > .002) %>%
+  mutate(log_ratio3_4 = log2(topic4 / topic3))
+
+beta_wide
+```
+
+Si construimos una visualización, vemos que...
+
+```{r}
+beta_wide %>%
+  ggplot(aes(x=reorder(term,log_ratio3_4) , y=log_ratio3_4)) +
+    geom_col() +
+    coord_flip() +
+    labs(x='Término',
+         y='Log2 ratio topic4/topic3') +
+    theme_minimal()
+  
+```
+
+Vemos como palarbras como "pelo" o "look" caracterizan al tópico 3, mientras que "restaurate" o "cocina" representan al tópico 4. Esto ayuda a confirmar que se trata de dos tópicos diferenciados.
+
+
+#### Composición de tópicos por documento
+Además de estimar cada tema como una mezcla de palabras, LDA también modela cada documento como una mezcla de temas. Podemos examinar las probabilidades por documento por tema, llamadas $\gamma$, con el argumento `matrix = "gamma"` para `tidy()`.
 
 ```{r}
 doc_2_topics <- tidy(lda_2, matrix = "gamma")
-
 doc_2_topics %>%
-  rename(id = document) %>%
+  mutate(gamma = round(gamma, 5))
+```
+Cada uno de estos valores es una proporción estimada de palabras de ese documento que se generan a partir de ese tema. 
+
+Veamos los tópicos 3 y 4:
+
+```{r}
+doc_2_topics %>%
+  filter(topic == 3 | topic == 4) %>%
+  mutate(gamma = round(gamma, 5))
+
+```
+
+Por ejemplo, el modelo estima que  alrededor del 68% de las palabras en el documento 8 se generaron a partir del tema 3. O menos del 1% de las palabras del documento 1 se generan a partir del tópico 1.
+
+Para verificar esta respuesta, podríamos ordenar la matriz documento-término (ver Capítulo 5.1) y verificar cuáles eran las palabras más comunes en ese documento
+
+```{r}
+revistas_tidy %>%
+  filter(id==9) %>%
+  group_by(id, word) %>%
+  summarise(n=n()) %>%
+  select(word, n) %>%
+  arrange(desc(n))
+```
+
+Se ve como este artículo parecen predominar palabras del tópico 4 (comidas, restaurantes). Veamos el texto completo de este documento:
+
+```{r}
+revistas %>%
+  filter(id==9) %>%
+  select(text) %>%
+  pull()
+```
+
+Parece verse cómo habla tanto de la comida pero sobre todo es una nota sobre el cuidado del cuerpo: habla de lo malo que son los "cubitos de caldo" en la comida.
+
+Por último, podemos hacer un primer análisis más interesante a partir de esta matriz "gamma". Podríamos preguntarnos si existe una composición diferencial entre los temas de las revistas de hombres y de mujeres. Para ello, tomamos la matriz gamma, y hacemos un `left_join` con la tabla de revistas (en la que teníamos la categoría):
+
+```{r}
+doc_2_topics %>%
+  rename(id = document) %>% # tenemos que renombrar la columna para que pueda hacerse el join
   mutate(id = as.integer(id)) %>%
   left_join(revistas %>% select(id, categoria) %>% unique()) %>%
   group_by(categoria, topic) %>%
     summarise(mean = mean(gamma)*100
-              )
+              ) %>%
+  ggplot() +
+    geom_col(aes(x=topic, y=mean, fill=categoria), position='dodge') +
+    theme_minimal()
+    
 ```
 
+Vemos cómo las revistas de mujeres parecen concentrarse en los tópicos 1 y 3, mientras que las de hombres, en los tópicos 1, 2 y 4. Siendo el tópico 3 el menos prevalente.
 
-EXPLICAR
 
-
+## Actividad: un modelo de 10 tópicos.
+Habíamos dicho que 
 
 ```{r}
-library(tictoc)
-
-tic()
-lda_50 <- LDA(disc_dtm, k=10, control = list(seed = 9875))
-lda_50
-toc()
-
-write_rds(lda_50, '../models/lda_10.rds')
+#lda_10 <- LDA(disc_dtm, k=10, control = list(seed = 9875))
+lda_10 <- read_rds('../models/lda_10.rds')
+lda_10
 ```
 
+### Generar el gráfico de palabras por tópicos
 ```{r}
-ap_topics_10 <- tidy(lda_50, matrix = "beta")
-
-ap_top_terms <- ap_topics_10 %>%
-  group_by(topic) %>%
-  slice_max(beta, n = 20) %>% 
-  ungroup() %>%
-  arrange(topic, -beta)
-
-
-ap_top_terms %>%
-  mutate(term = reorder_within(term, beta, topic)) %>%
-  ggplot(aes(beta, term, fill = factor(topic))) +
-  geom_col(show.legend = FALSE) +
-  facet_wrap(~ topic, scales='free_y') +
-  scale_y_reordered()
+###
 ```
 
 ```{r}
