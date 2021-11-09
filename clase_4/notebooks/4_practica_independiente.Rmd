@@ -16,7 +16,7 @@ lda_10 <- read_rds('../models/lda_10.rds')
 lda_10
 ```
 
-Si quieieran entrenarlo ustedes mismos o probar otras especificaciones, pueden hacerlo simplemente cambiando el parámetro k:
+Si quisieran entrenarlo ustedes mismos o probar otras especificaciones, pueden hacerlo simplemente cambiando el parámetro k:
 
 ```{r}
 #lda_10 <- LDA(disc_dtm, k=10, control = list(seed = 9875))

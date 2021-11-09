@@ -1,6 +1,6 @@
 ---
 title: "Modelado de tópicos Vol. 1. Latent Dirichlet Allocation"
-subtitle: "Los diarios de Emilio Renzi (tres tomos)"
+subtitle: "Temas en revistas con targets diferentes"
 output: html_notebook
 ---
 
@@ -92,7 +92,7 @@ stop_words <- read_delim('../data/stopwords.txt',
 
 ## Aquí agregamos algunas palabras al listado de stopwords...
 stop_words <- stop_words %>%
-                bind_rows( tibble(word=c('ano', 'anos', 'ohlala', 'foto', 'the'))) #lexicon=c('custom', 'custom')))
+                bind_rows( tibble(word=c('ano', 'anos', 'ohlala', 'foto', 'the'))) 
 ```
 
 ```{r}
@@ -163,7 +163,7 @@ ap_topics <- tidy(lda_2, matrix = "beta")
 ap_topics
 ```
 
-La funciín `tidy`conviritó el modelo a un formato de un tópico-término por fila. Para cada combinación, el modelo calcula la probabilidad de que ese término se genere a partir de ese tópico. Por ejemplo, el término "cesped" tiene una probabilidad de 3.21x10-13  de ser generado a partir del tema 1. Esta valor baja sensiblemente en el resto de los tópicos.
+La función `tidy`conviritó el modelo a un formato de un tópico-término por fila. Para cada combinación, el modelo calcula la probabilidad de que ese término se genere a partir de ese tópico. Por ejemplo, el término "cesped" tiene una probabilidad de 3.21x10-13  de ser generado a partir del tema 1. Esta valor baja sensiblemente en el resto de los tópicos.
 
 Podríamos usar el `slice_max()` de `dplyr` para encontrar los 15 términos que son más comunes dentro de cada tema. Dado que tenemos una tibble, podemos usar una visualización de `ggplot2`.
 
@@ -220,7 +220,7 @@ beta_wide %>%
   
 ```
 
-Vemos como palarbras como "pelo" o "look" caracterizan al tópico 3, mientras que "restaurate" o "cocina" representan al tópico 4. Esto ayuda a confirmar que se trata de dos tópicos diferenciados.
+... palabras como "pelo" o "look" caracterizan al tópico 3, mientras que "restaurate" o "cocina" representan al tópico 4. Esto ayuda a confirmar que se trata de dos tópicos diferenciados.
 
 
 #### Composición de tópicos por documento
