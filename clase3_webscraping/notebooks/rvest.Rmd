@@ -1,5 +1,5 @@
 ---
-title: "Web scraping con RVest"
+title: "Clase 3 - Web scraping con RVest"
 output: html_notebook
 ---
 ```{r, include=FALSE}
@@ -47,7 +47,7 @@ piglia <- read_html("https://www.anagrama-ed.es/autor/piglia-ricardo-856")
 piglia
 ```
 
-La función **read_html()** devuelve una lista que contiene la estructura arbolada de HTML que mencionamos antes. Por suerte RVest usa la lógica de los pipes para acceder a estos elementos, por lo que para encontrar lo que queremos podemos usar la funcion **html_elements()**. Esta identifica los elementos que buscamos según XPath o [selectores CSS](https://www.w3schools.com/cssref/css_selectors.asp). Como podemos encontrar lo que queríamos identificándolo por una clase única, vamos a usar CSS. 
+La función **read_html()** parsea y devuelve una lista que contiene la estructura arbolada de HTML que mencionamos antes. Por suerte RVest usa la lógica de los pipes para acceder a estos elementos, por lo que para encontrar lo que queremos podemos usar la funcion **html_elements()**. Esta identifica los elementos que buscamos según XPath o [selectores CSS](https://www.w3schools.com/cssref/css_selectors.asp). Como podemos encontrar lo que queríamos identificándolo por una clase única, vamos a usar CSS. 
 
 ```{r}
 libros <- piglia %>% html_elements(".libro-vertical__info")%>% 
@@ -63,6 +63,8 @@ Esto nos devuelve un listado de los links de los libros:
 
 ```{r}
 libros_links <- paste0("https://www.anagrama-ed.es", libros)
+
+libros_links
 ```
 
 Ahora que tenemos el listado sobre el cual queremos iterar, hay que revisar la página de cada libro para ver la información que tiene. En principio, podemos destacar 3 elementos de nuestro interés: 
@@ -130,9 +132,10 @@ scrapeo_anagrama <- function(listado_links){
         titulos <- c()
         resumenes <- c()
         info_extra <- data.frame(isbn = numeric(), ean  = numeric(), precio = character(), 
-                                 paginas  = numeric(), fecha_publicacion = character(), coleccion = character())
+                                 paginas  = numeric(), fecha_publicacion = character(), 
+                                 coleccion = character())
         
-        for (l in libros_links){
+        for (l in listado_links){
                 
                 libro <- read_html(l)
                 
@@ -188,7 +191,7 @@ scrapeo_anagrama <- function(listado_links){
         info_extra <- data.frame(isbn = numeric(), ean  = numeric(), precio = character(), 
                                  paginas  = numeric(), fecha_publicacion = character(), coleccion = character())
         
-        for (l in libros_links){
+        for (l in listado_links){
                 
                 libro <- read_html(l)
                 
@@ -253,7 +256,3 @@ Traer de la página de Anagrama el listado de todos los autores que tienen dispo
 ```{r}
 
 ```
-
-### APIS
-
-https://statistics.cepal.org/portal/cepalstat/open-data-api.html?lang=es
