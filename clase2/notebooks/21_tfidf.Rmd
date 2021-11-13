@@ -77,37 +77,6 @@ book_words %>%
 Hay colas muy largas a la derecha para esos tomos (son muy raras) que no hemos mostrado en estos tramas. En general, los gráficos son similares en las novelas. Pocas palabras que ocurren mucho y muchas poco.
 
 
-## Ley de Zipf
-Las distribuciones como las anteriores son bastante típicas en el lenguaje. De hecho, esos tipos de distribuciones de cola larga son tan comunes en cualquier corpus (como un libro, una gran cantidad de texto de un sitio web o palabras habladas) que la relación entre la frecuencia con la que se usa una palabra y su rango ha sido objeto de estudio; una versión clásica de esta relación se llama [ley de Zipf](https://en.wikipedia.org/wiki/Zipf%27s_law), en honor a George Zipf, un lingüista estadounidense del siglo XX.
-
-La idea es que la frecuencia con que aparece una palabra es inversamente proporcional a su rango.
-
-```{r}
-freq_by_rank <- book_words %>% 
-  group_by(tomo) %>% 
-  mutate(rank = row_number(), 
-         `tf` = n/total) %>%
-        ungroup()
-
-freq_by_rank
-```
-
-La columna de `rank` nos informa el orden de cada palabra dentro de la tabla de frecuencia; la tabla ya estaba ordenada por `n`, por lo que podríamos usar `row_number()` para encontrar el rango. 
-
-Luego, podemos calcular la frecuencia del término de la misma manera que lo hicimos antes. La ley de Zipf a menudo se visualiza trazando el rango en el eje x y la frecuencia del término en el eje y, en escalas logarítmicas. Graficando de esta manera, una relación inversamente proporcional tendrá una pendiente negativa constante.
-
-```{r}
-freq_by_rank %>% 
-  ggplot(aes(rank, `tf`, color = tomo)) +
-        geom_line(size = 1.1, alpha = 0.8) +
-        scale_x_log10() +
-        scale_y_log10() +
-        theme_minimal()
-```
-
-Observemos que el gráfico anterior está en coordenadas log-log. Los tres tomos de los diarios de REnzi son similares: la relación entre rango y frecuencia tiene una pendiente negativa.
-
-
 ### Calculando todas las métricas: la función `bind_tfi_idf()`
 Repitámoslo una vez más: la idea de tf-idf es encontrar las palabras importantes para el contenido de cada documento disminuyendo el peso de las palabras de uso común y aumentando el peso de las palabras que no se usan mucho en una colección o corpus de documentos. El cálculo de tf-idf intenta encontrar las palabras que son importantes (es decir, comunes) en un texto, pero informativas (no demasiado comunes).
 

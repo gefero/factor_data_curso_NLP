@@ -1,0 +1,263 @@
+---
+title: "Modelado de tópicos Vol. 2. Structural Topic Modeling"
+subtitle: "Temas en revistas con targets diferentes"
+output: html_notebook
+---
+
+```{r echo=TRUE, results='hide'}
+library(tidyverse)
+library(stm)
+library(topicmodels)
+library(tidytext)
+library(tictoc)
+```
+
+
+## Introducción
+
+
+## Structural Topic Modeling (STM). Analizando revistas para mujeres y para hombres
+
+Veamos un ejemplo:
+
+```{r}
+revistas <- read_csv('../data/revistas_limpias_final.csv')
+
+head(revistas)
+```
+
+Arreglemos un poco la variable fecha...
+
+```{r}
+revistas <- revistas %>%
+  mutate(fecha = lubridate::dmy(fecha))
+```
+
+
+## Preprocesamiento
+
+Vamos a normalizar, primero, los campos de texto. Con esta instrucción cambiamos el encoding de texto de los campos `text` y `title` y lo pasamos a ASCII. Esta es una forma bastante rápida de eliminar tildes, ñ y otros acentos.
+
+```{r}
+revistas <- revistas %>%
+                mutate(text = stringi::stri_trans_general(text, "Latin-ASCII"),
+                       titulo = stringi::stri_trans_general(titulo, "Latin-ASCII"))
+```
+
+Eliminamos los dígitos que encontremos en el texto...
+
+```{r}
+revistas <- revistas %>%
+          mutate(text = str_replace_all(text, '[[:digit:]]+', ''))
+```
+
+
+Ahora podemos tokenizarlo:
+
+```{r}
+revistas_tidy <- revistas %>%
+                unnest_tokens(word, text)
+```
+
+```{r}
+stop_words <- read_delim('../data/stopwords.txt', 
+                         delim = '\t',
+                         col_names = c('word')) %>%
+                        mutate(word=stringi::stri_trans_general(word, "Latin-ASCII"))
+
+
+## Aquí agregamos algunas palabras al listado de stopwords...
+stop_words <- stop_words %>%
+                bind_rows( tibble(word=c('ano', 'anos', 'ohlala', 'foto', 'the'))) 
+```
+
+```{r}
+revistas_tidy <- revistas_tidy %>%
+                anti_join(stop_words)
+
+metadata <- revistas_tidy %>%
+                  select(id, categoria) %>%
+                  distinct() %>%
+                  left_join(revistas %>% select(id, text))
+```
+
+```{r}
+revistas_tidy %>%
+        group_by(word) %>%
+        summarise(n=n()) %>%
+        arrange(desc(n))
+```
+
+
+### Modelado de tópicos: LDA
+Repasemos: vamos a entrenar un LDA de 15 tópicos. La idea es tenerlo como "benchmark" para comparar los resultados con los que van a salir de STM:
+
+Las filas corresponden a documentos (textos descriptivos en nuestro caso) y las columnas corresponden a términos (es decir, palabras); es una matriz dispersa y los valores son recuentos de palabras. Primero, generamos nuestra tabla tidy de conteos
+
+```{r}
+word_counts <- revistas_tidy %>%
+        group_by(id, word) %>%
+        summarise(n=n()) %>%
+        ungroup()
+```
+
+Generamos la DTM:
+```{r}
+revistas_dtm <- word_counts %>% 
+                  cast_dtm(id, word, n)
+
+revistas_dtm
+```
+
+Entrenamos el LDA:
+
+```{r}
+
+#lda_15 <- LDA(revistas_dtm, k=15, control = list(seed = 9514))
+#write_rds(lda_15, '../models/lda_15.rds')
+
+lda_15 <- read_rds('../models/lda_15.rds')
+```
+
+Generamos las matrices de betas y gammas:
+
+```{r}
+betas_lda <- tidy(lda_15, matrix='beta')
+doc_2_topics_lda <- tidy(lda_15, matrix='gamma')
+```
+
+
+### Modelado de tópicos: STM
+Para hacer el modelado de temas como se implementa aquí, necesitamos generar una `DocumentFrequencyMatrix`, un tipo especial de matriz del paquete `quanteda` (por supuesto, esto es solo una implementación específica del concepto general de una TFM). 
+
+
+Tenemos hasta aquí nuestra estructura de datos habitual: un token por fila y una columna de conteo. Vamos a transformarla ahora a una DFM del paquete :
+
+```{r}
+revistas_dfm <- word_counts %>%
+                cast_dfm(id, word, n)
+
+revistas_dfm
+```
+
+
+```{r}
+tic()
+stm_15 <- stm(documents = revistas_dfm,
+    K = 15, 
+    prevalence = ~categoria,
+    max.em.its = 75, 
+    data = metadata,
+    init.type = "Spectral")
+toc()
+
+write_rds(stm_15, '../models/stm_15.rds')
+```
+
+```{r}
+betas_stm <- tidy(stm_15, matrix='beta')
+doc_2_topics_stm <- tidy(stm_15, matrix='theta')
+```
+
+Hagamos una comparación entre los dos modelos. Primero, veamos las matrices de palabras por topicos.
+
+```{r}
+ betas_stm %>%
+  group_by(topic) %>%
+  slice_max(beta, n = 15) %>% 
+  ungroup() %>%
+  arrange(topic, -beta) %>%
+  mutate(term = reorder_within(term, beta, topic)) %>%
+  ggplot(aes(beta, term, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales='free_y') +
+  scale_y_reordered() +
+  theme_minimal()
+
+```
+
+En el caso de STM podemos ver los siguientes tópicos:
+
+1. Entretenimientos/espectáculos
+2. Misc.
+3. Moda, look
+4. Moda, diseño
+5. Pareja
+6. Deportes
+7. Espectáculos/series
+8. Música y discos
+9. Tecnología/economía
+10. Música y cocina (salidas, quizás...)
+11. Vinos
+12. Cuidado del pelo
+13. Cocina y restaurantes
+14. Alimentación, cuidado del cuerpo
+15. Niños y educación
+
+```{r}
+ betas_lda %>%
+  group_by(topic) %>%
+  slice_max(beta, n = 15) %>% 
+  ungroup() %>%
+  arrange(topic, -beta) %>%
+  mutate(term = reorder_within(term, beta, topic)) %>%
+  ggplot(aes(beta, term, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales='free_y') +
+  scale_y_reordered() +
+  theme_minimal()
+```
+
+1. Misc.
+2. Entretenimiento general (libros, películas, series, TV)
+3. Alimentación y salud (con otras palabras raras)
+4. Pareja y cuerpo
+5. Músca
+6. Cuidado del cuerpo
+7. Cocina
+8. Misc.
+9. Moda (ropa, zapatos, etc.)
+10. Deportes
+11. Entretenimiento (TV, series)
+12. Tecnología/autos (?)
+13. Economía/tecnología
+14. Vinos
+15. Cocina y gastronomía
+
+
+
+
+```{r}
+doc_2_topics_stm <- doc_2_topics_stm %>%
+  rename(id=document) %>%
+  left_join(metadata)
+```
+
+
+```{r}
+doc_2_topics_stm %>%
+  group_by(categoria, topic) %>%
+  summarise(mean = mean(gamma)) %>%
+  drop_na() %>%
+  ggplot(aes(x=categoria, y=mean, fill=categoria)) + 
+    geom_col(position='dodge') +
+    facet_wrap(~topic) +
+    theme_minimal()
+```
+
+```{r}
+doc_2_topics_lda <- doc_2_topics_lda %>%
+  rename(id=document) %>%
+  mutate(id=as.integer(id)) %>%
+  left_join(metadata)
+
+doc_2_topics_lda %>%
+  group_by(categoria, topic) %>%
+  summarise(mean = mean(gamma)) %>%
+  drop_na() %>%
+  ggplot(aes(x=categoria, y=mean, fill=categoria)) + 
+    geom_col(position='dodge') +
+    facet_wrap(~topic) +
+    theme_minimal()
+```
+

@@ -38,7 +38,13 @@ Pueden descargarse la totalidad de los materiales del repositorio para trabajar 
 
 
 ## Clase 3. Web Scraping
+- [Explicación y práctica - Notebook](/clase3/notebooks/3_clase.nb.html)
+- [Explicación y práctica - RMarkdown](/clase3/notebooks/3_clase.Rmd)
+- [Práctica independiente](/clase3/notebooks/3_practica_independiente.Rmd)
 
+Pueden descargarse la totalidad de los materiales del repositorio para trabajar en un único archivo .zip
+
+[![](imgs/Download.png)](clase3.zip)
 
 ## Clase 4. ¿Cómo detectar temas en corpus I? Introducción al modelado de tópicos. Latent Semantic Analysis (LSA) y Latent Dirichlet Allocation (LDA)
 
