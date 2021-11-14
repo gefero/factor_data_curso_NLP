@@ -129,6 +129,9 @@ tidy_renzi_sent_kag <- tidy_renzi %>%
                     values_from=n,
                     values_fill=0) %>%
         mutate(sentiment = positivo - negativo)
+
+
+tidy_renzi_sent_kag
 ```
 
 Ahora ya podemos hacer un primer gráfico de la evolución de los "sentimientos" de Renzi a lo largo de su vida (al menos, a lo largo de las entradas de su diario)
