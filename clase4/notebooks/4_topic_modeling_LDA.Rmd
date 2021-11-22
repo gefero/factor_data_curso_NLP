@@ -146,10 +146,8 @@ Vemos que este conjunto de datos contiene documentos (cada uno de ellos un discu
 Ahora usemos el paquete `topicmodels` para estimar un modelo LDA. ¿Cuántos temas le diremos al algoritmo que haga? Esta es una pregunta muy parecida a la de un clustering de k-medias. La respuesta es desilusionadora: no lo sabemos. No queda otra opción que ir probando. Por ahora y a los fines prácticos de esta primera aproximación vamos a probar un modelo muy simple: 4 temas.
 
 ```{r}
-tic()
-lda_2 <- LDA(disc_dtm, k=4, control = list(seed = 1234))
-lda_2
-toc()
+lda_4 <- LDA(disc_dtm, k=4, control = list(seed = 1234))
+
 ```
 
 Vemos que entrenar el modelo es simple: una línea de código. Lo difícil viene ahora.
@@ -159,7 +157,7 @@ Vemos que entrenar el modelo es simple: una línea de código. Lo difícil viene
 Lo primero que vamos a hacer es tomar la distribución de palabras para cada tópico. Para construir esa distribución vamos a tomar la matriz `beta` que está dentro del objeto `stm`:
 
 ```{r}
-ap_topics <- tidy(lda_2, matrix = "beta")
+ap_topics <- tidy(lda_4, matrix = "beta")
 ap_topics
 ```
 
@@ -227,7 +225,7 @@ beta_wide %>%
 Además de estimar cada tema como una mezcla de palabras, LDA también modela cada documento como una mezcla de temas. Podemos examinar las probabilidades por documento por tema, llamadas $\gamma$, con el argumento `matrix = "gamma"` para `tidy()`.
 
 ```{r}
-doc_2_topics <- tidy(lda_2, matrix = "gamma")
+doc_2_topics <- tidy(lda_4, matrix = "gamma")
 doc_2_topics %>%
   mutate(gamma = round(gamma, 5))
 ```
@@ -283,5 +281,4 @@ doc_2_topics %>%
 ```
 
 Vemos cómo las revistas de mujeres parecen concentrarse en los tópicos 1 y 3, mientras que las de hombres, en los tópicos 1, 2 y 4. Siendo el tópico 3 el menos prevalente.
-
 
