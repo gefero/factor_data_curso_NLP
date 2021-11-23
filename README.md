@@ -42,8 +42,10 @@ Pueden descargarse la totalidad de los materiales del repositorio para trabajar 
 ## Clase 3. Web Scraping
 
 - [Slides - pdf](/clase3/DIPLO_TM_Clase_3.pdf)
-- [Explicación y práctica - Notebook](/clase3/notebooks/3_clase.nb.html)
-- [Explicación y práctica - RMarkdown](/clase3/notebooks/3_clase.Rmd)
+- [Scraping - Explicación y práctica - Notebook](/clase3/notebooks/3_clase.nb.html)
+- [Scraping - Explicación y práctica - RMarkdown](/clase3/notebooks/3_clase.Rmd)
+- [APIS - Explicación y práctica - Notebook](/clase3/notebooks/APIs.nb.html)
+- [APIS - Explicación y práctica - RMarkdown](/clase3/notebooks/APIs.Rmd)
 - [Práctica independiente](/clase3/notebooks/3_practica_independiente.Rmd)
 
 Pueden descargarse la totalidad de los materiales del repositorio para trabajar en un único archivo .zip
