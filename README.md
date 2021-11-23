@@ -14,9 +14,9 @@ En las ciencias sociales argentinas el análisis de textos parece haber estado c
 # Contenidos y materiales
 ## Clase 1. Introducción a R y al tidyverse y a tidytext. ¿Cómo hacer de un corpus de texto crudo algo analizable mediante métodos cuantitativos? Preprocesamiento de texto: stopwords, lemmas y stemming. 
 
+- [Slides - pdf](/clase1/DIPLO_TM_Clase_1.pdf)
 - [Explicación y práctica - Notebook](/clase1/notebooks/clase_1.nb.html)
 - [Explicación y práctica - RMarkdown](/clase1/notebooks/clase_1.Rmd)
-- [Slides - pdf](/clase1/DIPLO_TM_Clase_1.pdf)
 - [Práctica Independiente - RMarkdown](/clase1/notebooks/practica_clase_1.Rmd)
 - [Práctica Independiente - Notebook](/clase1/notebooks/practica_clase_1.nb.html)
 
@@ -26,11 +26,13 @@ Pueden descargarse la totalidad de los materiales del repositorio para trabajar 
 
 
 ## Clase 2. ¿Cómo vectorizar textos? Contando palabras y extrayendo conclusiones de un corpus. Bag of Words. Term-frequency matrix: conteos crudos y ponderación TF-IDF. Análisis de sentimientos sobre un corpus. 
+
+- [Slides - pdf](/clase2/DIPLO_TM_Clase_2.pdf)
 - [Sentiment Analysis - Explicación y práctica - Notebook](/clase2/notebooks/2_sentimient_analysis.nb.html)
 - [Sentiment Analysis - Explicación y práctica - RMarkdown](/clase2/notebooks/2_sentimient_analysis.Rmd)
 - [TF-IDF - Explicación y práctica - Notebook](/clase2/notebooks/21_tfidf.nb.html)
 - [TF-IDF - Explicación y práctica - RMarkdown](/clase2/notebooks/21_tfidf.Rmd)
-- [Slides - pdf](/clase2/DIPLO_TM_Clase_2.pdf)
+
 
 Pueden descargarse la totalidad de los materiales del repositorio para trabajar en un único archivo .zip
 
@@ -38,6 +40,8 @@ Pueden descargarse la totalidad de los materiales del repositorio para trabajar 
 
 
 ## Clase 3. Web Scraping
+
+- [Slides - pdf](/clase3/DIPLO_TM_Clase_3.pdf)
 - [Explicación y práctica - Notebook](/clase3/notebooks/3_clase.nb.html)
 - [Explicación y práctica - RMarkdown](/clase3/notebooks/3_clase.Rmd)
 - [Práctica independiente](/clase3/notebooks/3_practica_independiente.Rmd)
@@ -48,7 +52,7 @@ Pueden descargarse la totalidad de los materiales del repositorio para trabajar 
 
 ## Clase 4. ¿Cómo detectar temas en corpus I? Introducción al modelado de tópicos. Latent Dirichlet Allocation (LDA)
 
-
+- [Slides - pdf](/clase4/DIPLO_TM_Clase_4.pdf)
 - [Explicación y práctica - Notebook](/clase4/notebooks/4_topic_modeling_LDA.nb.html)
 - [Explicación y práctica - RMarkdown](/clase4/notebooks/4_topic_modeling_LDA.Rmd)
 - [Práctica independiente](/clase4/notebooks/4_practica_independiente.nb.html)
