@@ -64,6 +64,11 @@ Pueden descargarse la totalidad de los materiales del repositorio para trabajar 
 
 ## Clase 5. ¿Cómo detectar temas en corpus II? Un modelo para detectar tópicos diseñado para las ciencias sociales: Structural Topic Modeling.
 
+- [Slides - pdf](/clase4/DIPLO_TM_Clase_5.pdf)
+- [Explicación y práctica - Notebook](/clase5/notebooks/5_topic_modeling_STM.nb.nb.html)
+- [Explicación y práctica - RMarkdown](/clase5/notebooks/5_topic_modeling_STM.Rmd)
+
+[![](imgs/Download.png)](clase5.zip)
 
 ## Clase 6. Cómo vectorizar textos (recargado)? Una introducción a los métodos de word-embeddings (doc2vec y FastText). Cierre del módulo
 
