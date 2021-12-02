@@ -1,0 +1,149 @@
+---
+title: ""
+output: html_notebook
+---
+
+```{r echo=TRUE, results='hide'}
+library(tidyverse)
+library(tidytext)
+library(tictoc)
+library(word2vec)
+library(textclean)
+library(textstem)
+```
+
+## Introducción
+En este notebook vamos a entrenar un modelo de Word embeddings con datos de Los Simpsons (guiones de varias temporadas, cerca de 150 mil lineas de dialogo para unos 600 episodios) y tratar de entender los resultados.
+
+La idea va a ser tratar de 
+
+## Q
+
+
+
+## Detectando relaciones con Los Simpsons
+
+```{r}
+dialogos <- read_csv('../data/simpsons_script_lines.csv') %>%
+           select(id, raw_character_text, spoken_words)
+```
+
+Hay valores faltantes en la primera columna que tienen que ver con dialogo que no es provisto por ninguno de los personajes, por ejemplo, voces en off, etc. Podemos removerlo como sigue:
+
+```{r}
+dialogos <- dialogos %>%
+                drop_na()
+```
+
+Ahora, vamos a limpiar el texto. Empezamos implementando la funcion que vimos en el notebook de procesado de texto para remover simbolos, pasar a minuscilas, etc.
+
+Pero hay una diferencia: en el idioma inglés, el símbolo ' se usa para contracciones, y si lo removemos sin expandir las contracciones perdemos informacion. Por lo tanto, antes vamos a lidiar con las contracciones usando una función del paquete `textclean`:
+
+```{r}
+dialogos <- dialogos %>%
+        mutate(spoken_words=replace_contraction(spoken_words))
+
+head(dialogos)
+```
+
+```{r}
+dialogos <- dialogos %>%
+        mutate(spoken_words = str_replace_all(spoken_words, "[[:punct:]]", "")) %>%
+        mutate(spoken_words = tolower(spoken_words)) %>%
+        mutate(spoken_words = str_replace_all(spoken_words, '[[:digit:]]+', ''))
+
+head(dialogos)
+```
+
+```{r}
+
+```
+
+
+
+```{r}
+dialogos <- dialogos %>%
+        mutate(spoken_words_lemma = lemmatize_words(dialogos$spoken_words))
+```
+
+
+
+
+
+```{r}
+library(quanteda)
+tokens <- tokens(dialogos$spoken_words_lemma)
+tokens <- tokens_remove(tokens, stopwords("english"))
+tokens <- tokens_ngrams(tokens, n = 1:2)
+dfm <- dfm(tokens)
+```
+
+
+```{r}
+
+tokens[['text1']]
+
+```
+
+
+```{r}
+dialogos_tidy <- dfm %>%
+                        tidy()
+
+```
+
+
+
+
+```{r}
+data(stop_words)
+dialogos_tidy <- dialogos_tidy %>%
+                        anti_join(stop_words)
+
+```
+
+```{r}
+diag2vec <-dialogos_tidy %>%
+        group_by(id, raw_character_text) %>% 
+        unnest_tokens(bigram, word, token = "ngrams", n = 1:2) %>%
+        drop_na() %>%
+        mutate(bigram = str_replace_all(bigram, " ", "_")) %>%
+        ungroup()
+```
+
+
+
+```{r}
+diag2vec_f <- diag2vec %>%
+          group_by(id, raw_character_text) %>% 
+        summarize(text = str_c(bigram, collapse = " ")) %>%
+        ungroup()
+```
+
+
+```{r}
+word2vec_s <- word2vec(x=diag2vec_f$text,
+                       type='skip-gram',
+                       window=3,
+                       dim=300,
+                       sample=6e-5,
+                       lr=0.03,
+                       negative=20
+                       ) 
+        ```
+
+```{r}
+model <- as.matrix(word2vec_s)
+```
+
+```{r}
+predict(word2vec_s, newdata = c("moe"), type = "nearest", top_n = 5)
+predict(word2vec_s, newdata = c("chalmers"), type = "nearest", top_n = 5)
+
+
+```
+
+```{r}
+ predict(word2vec_s, c("chalmers", "willie"), type = "nearest", top_n = 5)
+```
+

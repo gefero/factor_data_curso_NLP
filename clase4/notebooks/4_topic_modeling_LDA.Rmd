@@ -70,6 +70,8 @@ Ahora podemos tokenizarlo:
 ```{r}
 revistas_tidy <- revistas %>%
                 unnest_tokens(word, text)
+
+head(revistas_tidy)
 ```
 
 Hagamos una exploración rápida:
@@ -128,6 +130,9 @@ word_counts <- revistas_tidy %>%
         group_by(id, word) %>%
         summarise(n=n()) %>%
         ungroup()
+
+
+head(word_counts)
 ```
 
 Tenemos hasta aquí nuestra estructura de datos habitual: un token por fila y una columna de conteo. Vamos a transformarla ahora a una TFM:
@@ -147,7 +152,6 @@ Ahora usemos el paquete `topicmodels` para estimar un modelo LDA. ¿Cuántos tem
 
 ```{r}
 lda_4 <- LDA(disc_dtm, k=4, control = list(seed = 1234))
-
 ```
 
 Vemos que entrenar el modelo es simple: una línea de código. Lo difícil viene ahora.

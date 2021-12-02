@@ -115,26 +115,25 @@ revistas_dfm
 
 
 ```{r}
-tic()
+# 
+# stm_15 <- stm(documents = revistas_dfm,
+#      K = 15, 
+#      content = ~ categoria,
+#      max.em.its = 75, 
+#      data = metadata,
+#      init.type = "Spectral")
+# write_rds(stm_15, '../models/stm_15_cont.rds')
+# 
+# stm_15 <- stm(documents = revistas_dfm,
+#      K = 15,
+#      prevalence = ~categoria,
+#      max.em.its = 75, 
+#      data = metadata,
+#      init.type = "Spectral")
+# write_rds(stm_15, '../models/stm_15_prev_cont.rds')
+# toc()
 
-stm_15 <- stm(documents = revistas_dfm,
-     K = 15, 
-     content = ~ categoria,
-     max.em.its = 75, 
-     data = metadata,
-     init.type = "Spectral")
-write_rds(stm_15, '../models/stm_15_cont.rds')
-toc()
-
-stm_15 <- stm(documents = revistas_dfm,
-     K = 15, 
-     prevalence = ~categoria,
-     max.em.its = 75, 
-     data = metadata,
-     init.type = "Spectral")
-write_rds(stm_15, '../models/stm_15_prev_cont.rds')
-toc()
-#stm_15 <- read_rds('../models/stm_15_prev.rds')
+stm_15 <- read_rds('../models/stm_15_prev.rds')
 
 ```
 
@@ -210,7 +209,8 @@ Si vemos las palabras de alto $\beta$ pareciera que habla de economía o algo as
 Para examinar documentos que están altamente asociados con temas, la función `findThoughts()` puede ser usada. Esta función imprimirá los documentos altamente asociados con cada tema. Leer estos documentos es útil para comprender el contenido de un tema e interpretar su definicion. 
 
 ```{r}
-findThoughts(stm_15, texts=metadata %>% mutate(text = str_sub(text, 1, 200)) %>% select(text) %>% pull(), 
+findThoughts(stm_15, 
+             texts=metadata %>% mutate(text = str_sub(text, 1, 200)) %>% select(text) %>% pull(), 
              n=10, 
              topics=9)
 ```
@@ -219,6 +219,20 @@ Al ver los primeros 5 documentos parece claro que se trata de tópico que habla 
  
 #### Actividad
 Repetir el ejercicio de validación con el tópico 5. ¿Qué pueden decir al respecto?
+
+
+```{r}
+labelTopics(stm_15, topic=5)
+```
+
+
+
+```{r}
+findThoughts(stm_15, 
+             texts=metadata %>% mutate(text = str_sub(text, 1, 200)) %>% select(text) %>% pull(), 
+             n=10, 
+             topics=5)
+```
 
 
 ### Comparando con un modelo LDA
@@ -287,7 +301,7 @@ Podemos etiquetar de alguna forma estos tópicos
 | 2           	| Misc.                                	| Entretenimiento general (libros, películas, series, TV) 	|
 | 3           	| Moda, look                           	| Alimentación y salud (con otras palabras raras)         	|
 | 4           	| Moda, diseño                         	| Pareja y cuerpo                                         	|
-| 5           	| Pareja                               	| Músca                                                   	|
+| 5           	| Horóscopo                           	| Músca                                                   	|
 | 6           	| Deportes                             	| Cuidado del cuerpo                                      	|
 | 7           	| Espectáculos/series                  	| Cocina                                                  	|
 | 8           	| Música y discos                      	| Misc.                                                   	|
