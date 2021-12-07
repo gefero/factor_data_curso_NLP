@@ -73,8 +73,8 @@ Pueden descargarse la totalidad de los materiales del repositorio para trabajar 
 ## Clase 6. Cómo vectorizar textos (recargado)? Una introducción a los métodos de word-embeddings (word2vec). Cierre del módulo
 
 - [Slides - pdf](/clase6/DIPLO_TM_Clase_6.pdf)
-- [Explicación y práctica - Notebook](/clase6/notebooks/6_word2vec.nb.nb.html)
-- [Explicación y práctica - RMarkdown](/clase6/notebooks/6_word2vec.nb.Rmd)
+- [Explicación y práctica - Notebook](/clase6/notebooks/6_word2vec.nb.html)
+- [Explicación y práctica - RMarkdown](/clase6/notebooks/6_word2vec.Rmd)
 
 [![](imgs/Download.png)](clase6.zip)
 
