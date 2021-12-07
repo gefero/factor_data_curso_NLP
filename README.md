@@ -70,8 +70,13 @@ Pueden descargarse la totalidad de los materiales del repositorio para trabajar 
 
 [![](imgs/Download.png)](clase5.zip)
 
-## Clase 6. Cómo vectorizar textos (recargado)? Una introducción a los métodos de word-embeddings (doc2vec y FastText). Cierre del módulo
+## Clase 6. Cómo vectorizar textos (recargado)? Una introducción a los métodos de word-embeddings (word2vec). Cierre del módulo
 
+- [Slides - pdf](/clase6/DIPLO_TM_Clase_5.pdf)
+- [Explicación y práctica - Notebook](/clase6/notebooks/6_word2vec.nb.nb.html)
+- [Explicación y práctica - RMarkdown](/clase6/notebooks/6_word2vec.nb.Rmd)
+
+[![](imgs/Download.png)](clase6.zip)
 
 # Librerías a utilizar
 El taller se desarrollará en R y se hará un uso extensivo de las siguientes librerías:
