@@ -83,12 +83,20 @@ El taller se desarrollará en R y se hará un uso extensivo de las siguientes li
 
 - `tidytext`
 - `topicmodels`
+- `stm`
+- `textstem`
+- `textclean`
+- `word2vec`
 
-Pueden instalarse utilizando las instrucciones:
+Pueden instalarse utili`zando las instrucciones:
 
 ```{r}
 install.packages('tidytext')
-install.packages('topicmodels') 
+install.packages('topicmodels')
+install.packages('stm')
+install.packages('textclean')
+install.packages('textstem')
+install.packages('word2vec')
 ```
 
 
