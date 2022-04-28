@@ -117,19 +117,19 @@ uni_bigramas <- uni_bigramas %>%
 Bueno, el siguiente paso consta de entrenar el modelo word2vec con los datos. Para eso, le pasamos una serie de parametros que estan explicados en el codigo siguiente. 
 
 ```{r}
-# word2vec_s <- word2vec(x=uni_bigramas$text, # Pasamos la columna con texto
-#                        type='skip-gram', # Elegimos el método de ventana
-#                        hs=FALSE,
-#                        min_count=20, # Ignora palabras cuya frecuencia es menor a esta
-#                       window=2, # Fijamos el tamaño de la ventana de contexto
-#                       dim=300, # Definimos en cuántas dimensiones queremos el embedding
-#                       sample=0.00006, # Umbral para downsamplear palabras muy frecuentes
-#                       lr=0.005, #  Tasa de aprendizaje inicial (param. de la red neuronal)
-#                       negative=20, # penalidad de palabras poco informaitvas
-#                       iter=50, # Iteraciones del modelo
-#                       split=c(" \n,.-!?:;/\"#$%&'()*+<=>@[]\\^`{|}~\t\v\f\r",
-#                               ".\n?!")
-#                       )
+word2vec_s <- word2vec(x=uni_bigramas$text, # Pasamos la columna con texto
+                       type='skip-gram', # Elegimos el método de ventana
+                       hs=FALSE,
+                       min_count=20, # Ignora palabras cuya frecuencia es menor a esta
+                      window=2, # Fijamos el tamaño de la ventana de contexto
+                      dim=300, # Definimos en cuántas dimensiones queremos el embedding
+                      sample=0.00006, # Umbral para downsamplear palabras muy frecuentes
+                      lr=0.005, #  Tasa de aprendizaje inicial (param. de la red neuronal)
+                      negative=20, # penalidad de palabras poco informaitvas
+                      iter=50, # Iteraciones del modelo
+                      split=c(" \n,.-!?:;/\"#$%&'()*+<=>@[]\\^`{|}~\t\v\f\r",
+                              ".\n?!")
+                      )
 # write.word2vec(word2vec_s, '../models/w2v_uni_bigrams3.bin')         
 ```
 
