@@ -3,7 +3,7 @@
 ## Docentes
 
 - [Germán Rosati](https://gefero.github.io/)
-- [Laia Domenech]()
+- [Laia Domenech](https://ldmnch.github.io/layitx/portfolio/)
 
 # Presentación
 El trabajo empírico en las ciencias sociales se caracteriza por su gran diversidad en el tipo de fuentes de información utilizadas: desde datos altamente estructurados (cuya forma más clásica son las encuestas) hasta datos de un grado menor de estructuración. En este último grupo, los datos textuales, ya se trate de documentos, noticias, entrevistas, etc.- ocupan un lugar central.
